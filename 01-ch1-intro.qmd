@@ -1,0 +1,32 @@
+# Introduction {#sec-intro}
+
+XXX
+
+## What's in this project directory?
+
+XXX                   
+
+-   `fig` XXX
+
+::: callout-note
+XXX
+:::
+
+## Quarto workflow
+
+1.  XXX
+
+    -   XXX
+
+
+## Recommended reading before you begin editing
+
+XXX
+
+::: callout-caution
+XXX
+:::
+
+{{< pagebreak >}}
+
+XXX

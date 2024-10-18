@@ -1,0 +1,19 @@
+{
+  "hash": "0f85f2be9a10da3c4e10ebc63e4359d9",
+  "result": {
+    "engine": "knitr",
+    "markdown": "# Code availability {#sec-code}\n\n<!--\nThe following reproducibility statement template is courtesy of Rob J. Hyndman and his Monash thesis template at https://robjhyndman.com/hyndsight/quarto_templates.html.\n\nThough it is recommended to include such a statement, the statement is optional and it should not be included if not true!\n\nYou can learn more about the **renv** package here:\nhttps://rstudio.github.io/renv/articles/renv.html\n-->\n\nThis thesis is written using Quarto with **renv** [@renv] to create a reproducible environment. All materials (including the data sets and source files) required to reproduce this document can be found at the Github repository [github.com/GITHUB-USERNAME/THESIS-REPO-NAME](https://github.com/github-username/thesis-repo-name). \n\nThis work is licensed under a [Creative Commons  Attribution-NonCommercial-ShareAlike 4.0 International License](http://creativecommons.org/licenses/by-nc-sa/4.0/).\n\n<!--\n\nhttps://github.com/quarto-dev/quarto-cli/discussions/6650\n\nThe type of code chunk below will correctly print all code within the same .qmd file but *cannot* pull code from other .qmd files within a project.\n\n-->\n\n<!--\nInclude all source code below\n-->\n\n::: {.cell}\n\n```{.r .cell-code}\n# =======================================================================\n# Sample R script for thesis template\n#\n# Cleans temp_raw_wnba.csv dataset, which contains data pulled from\n# https://www.espn.com/wnba/stats/player on 2024/06/19\n#\n# Last updated: 2024/06/19\n# =======================================================================\nlibrary(tidyverse)\n\nwnba <- read_csv(\"data/temp_raw_wnba.csv\") |> \n  janitor::clean_names() |> \n  # Pull jersey numbers off of names and \n  # turn height text into msmt (6'4\" = 6.3333)\n  mutate(jersey = str_extract(name, \"[0-9]+$\"),\n         name = str_remove(name, \"[0-9]+$\"),\n         ht_ft = parse_number(str_extract(ht, \"^[0-9]\")),\n         ht_in = parse_number(str_extract(ht, '[0-9]+\\\\\"$')),\n         height = ht_ft * 12 + ht_in,\n         weight = parse_number(wt),\n         position = factor(pos,\n                           levels = c(\"G\", \"F\", \"C\"),\n                           labels = c(\"Guard\", \"Forward\", \"Center\"))) |> \n  select(-c(ht, wt, ht_ft, ht_in, pos))\n  \nsave(wnba, file = \"data/temp_wnba.RData\")\n```\n:::\n\n::: {.cell}\n\n```{.r .cell-code}\n# =======================================================================\n# Sample R script for thesis template\n#\n# Doesn't do anything useful\n#\n# Last updated: 2024/08/24\n# =======================================================================\n\nprint(\"Hello, Amherst!\")\n```\n:::\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {
+      "knitr": [
+        "{\"type\":\"list\",\"attributes\":{},\"value\":[]}"
+      ]
+    },
+    "preserve": null,
+    "postProcess": false
+  }
+}
