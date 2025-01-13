@@ -1,4 +1,4 @@
-# Applications of Parallel Computing {#sec-simple}
+# Applications of Parallel Computing {#sec-parallel-comp}
 
 ```{r}
 #| label: setup

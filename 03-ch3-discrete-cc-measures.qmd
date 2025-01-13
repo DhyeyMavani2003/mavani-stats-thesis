@@ -1,4 +1,4 @@
-# Checkerboard Copula and Regression Association Measure {#sec-simple}
+# Checkerboard Copula and Regression Association Measure {#sec-ccram}
 
 ```{r}
 #| label: setup

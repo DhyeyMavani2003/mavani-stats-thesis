@@ -1,4 +1,4 @@
-# Conclusion {#sec-simple}
+# Conclusion {#sec-concl}
 
 ```{r}
 #| label: setup
