@@ -12,185 +12,28 @@ library(gt)
 theme_set(theme_classic())
 # If using kableExtra tables, print blank cells instead of `NA`
 options(knitr.kable.NA = "")
+
+# Load data
+load("data/temp_wnba.RData")
 ```
 
-In this chapter, we introduce the concept of copulas and the necessary preliminary concepts, including probability transformations, quantile functions, and dependence measures. Let's start by defining some mathematical notation & objects that we will use throughout this chapter.
+Make it accessible by starting with a motivating example, then proceed towards more rigorousness gradually until challenges for discrete case are covered.
 
-Define $\mathbb{R}$ as the real line $(-\infty, \infty)$ and $\mathbb{R}^2$ as the real plane $\mathbb{R} \times \mathbb{R}$. A rectangle in the real plane is defined by the Cartesian product of two closed intervals: $[x_1, x_2] \times [y_1, y_2]$, where the vertices of the rectangle are $(x_1, y_1), (x_1, y_2), (x_2, y_1), (x_2, y_2)$. We denote the unit interval as $\mathbb{I} = [0,1]$, with $\mathbb{I}^2 = [0,1] \times [0,1]$ representing the unit square.
-
-### Probability Integral Transformation
-
-**Lemma 1** (Probability Integral Transformation):  
-Let $F$ be a continuous distribution function, and let $X \sim F$. Then the transformed variable $F(X)$ follows a standard uniform distribution, i.e., $F(X) \sim U(0,1)$.
-
-To illustrate this concept, let’s generate a random sample from a normal distribution, apply the transformation, and plot the results.
 
 ```{r}
-#| label: fig-probability-integral-transform
-#| fig-cap: "Probability Integral Transformation of a Normally Distributed Sample."
-#| fig-width: 6
-#| fig-height: 4
-#| fig-dpi: 150
+#| label: fig-wnba-ht
+#| fig-cap: "Distribution of heights of WNBA players in the 2024 season."
 
-# Generate random normal sample
-set.seed(8990)
-normal_sample <- rnorm(1000)
+# Use Freedman-Diaconus rule to set binwidth
+ht_bw <- 2 * IQR(wnba$height) / nrow(wnba)^(1/3)
 
-# Apply transformation
-uniform_sample <- pnorm(normal_sample)
-
-# Plot both original and transformed samples
-data.frame(normal_sample, uniform_sample) %>%
-  pivot_longer(cols = everything(), names_to = "Distribution", values_to = "Value") %>%
-  ggplot(aes(x = Value, fill = Distribution)) +
-  geom_histogram(bins = 30, alpha = 0.6, position = "identity") +
-  facet_wrap(~ Distribution, scales = "free") +
-  labs(x = "Value", y = "Count") +
+# Create histogram of height faceted by player position
+ggplot(wnba, aes(height)) +
+  geom_histogram(binwidth = ht_bw) +
+  labs(x = "Height (in)",
+       y = "Count",
+       caption = "Source: https://www.espn.com/wnba/stats/player") +
   theme_bw()
-```
-
-### Quantile Function
-
-The quantile function $F^{-1}$ is defined as:
-$$
-F^{-1}(y) = \inf \{ x \in \mathbb{R} : F(x) \geq y \}, \quad y \in [0,1].
-$$
-
-For continuous and strictly increasing distribution functions $F$, $F^{-1} = F^{-1}$. However, if $F$ is not strictly increasing, it may not have an inverse in the usual sense.
-
-**Lemma 2** (Quantile Transform):  
-Let $U \sim U(0,1)$ and let $F$ be any distribution function. Then $F^{-1}(U) \sim F$.
-
-To demonstrate this, we can generate a uniform sample, apply the inverse transformation of a normal distribution, and compare the results.
-
-```{r}
-#| label: fig-quantile-transform
-#| fig-cap: "Quantile Transformation from Uniform to Normal Distribution."
-#| fig-width: 6
-#| fig-height: 4
-#| fig-dpi: 150
-
-# Generate uniform sample
-set.seed(8990)
-uniform_sample <- runif(1000)
-
-# Apply inverse transform (quantile function of normal)
-normal_quantile_sample <- qnorm(uniform_sample)
-
-# Plot both original and transformed samples
-data.frame(uniform_sample, normal_quantile_sample) %>%
-  pivot_longer(cols = everything(), names_to = "Distribution", values_to = "Value") %>%
-  ggplot(aes(x = Value, fill = Distribution)) +
-  geom_histogram(bins = 30, alpha = 0.6, position = "identity") +
-  facet_wrap(~ Distribution, scales = "free") +
-  labs(x = "Value", y = "Count") +
-  theme_bw()
-```
-
-## A Motivating Example: Comparison of Dependence
-
-Suppose we have two bivariate datasets, each consisting of 1000 independent observations from a bivariate random vector $(X_1, X_2)$ and $(Y_1, Y_2)$, respectively. We aim to analyze the dependence between the components of each dataset.
-
-To explore this, let’s calculate and compare the Pearson correlation coefficient for each dataset.
-
-```{r}
-#| label: tbl-correlation-coefficients
-#| tbl-cap: "Pearson Correlation Coefficients for Bivariate Datasets (X1, X2) and (Y1, Y2)."
-#| fig-width: 6
-#| fig-height: 4
-#| fig-dpi: 150
-
-# Generate synthetic data
-set.seed(8990)
-x1 <- rnorm(1000)
-x2 <- 0.7 * x1 + rnorm(1000, sd = 0.3)
-y1 <- rbeta(1000, 5, 10)
-y2 <- rexp(1000, rate = 1)
-
-# Calculate correlation
-correlations <- data.frame(
-  Pair = c("(X1, X2)", "(Y1, Y2)"),
-  Correlation = c(cor(x1, x2), cor(y1, y2))
-)
-
-correlations %>%
-  gt() %>%
-  cols_label(
-    Pair = "Variable Pair",
-    Correlation = "Pearson Correlation"
-  )
-```
-
-### Visualizing Dependence Structures
-
-Let’s plot scatterplots of $(X_1, X_2)$ and $(Y_1, Y_2)$ to visually examine the dependence structures.
-
-```{r}
-#| label: fig-scatter-dependence
-#| fig-cap: "Scatterplots of (X1, X2) and (Y1, Y2) showing different dependence structures."
-#| fig-width: 6
-#| fig-height: 4
-#| fig-dpi: 150
-
-data.frame(X1 = x1, X2 = x2, Y1 = y1, Y2 = y2) %>%
-  pivot_longer(cols = everything(), names_to = "Variable", values_to = "Value") %>%
-  ggplot(aes(x = Value, y = ifelse(Variable %in% c("X1", "X2"), x2, y2), color = Variable)) +
-  geom_point(alpha = 0.4) +
-  facet_wrap(~ Variable, scales = "free") +
-  labs(x = "Variable", y = "Dependence Structure") +
-  theme_minimal()
-```
-
-## Copulas
-
-Copulas enable the study of dependence independent of marginal distributions. A copula is a distribution function with standard uniform marginals. By transforming marginals to a standard uniform scale, copulas can be used to compare different dependency structures on an equal footing.
-
-### Subcopula Definition
-
-A 2-dimensional subcopula $C^S$ is defined on $D_1 \times D_2 \rightarrow [0,1]$, where:
-1. **Grounded**: $C^S(u, 0) = 0 = C^S(0, v)$ for all $u, v \in D_1 \times D_2$.
-2. **2-increasing**: $C^S(u_2, v_2) - C^S(u_1, v_2) - C^S(u_2, v_1) + C^S(u_1, v_1) \geq 0$, for $u_1 \leq u_2$ and $v_1 \leq v_2$.
-
-### Visualizing Uniform Marginals using Copula Transform
-
-To illustrate this concept, we can apply the copula transformation to both datasets and observe the transformed data. The transformed data for each dataset should now follow a standard uniform distribution on both axes.
-
-```{r}
-#| label: fig-copula-transform
-#| fig-cap: "Copula Transformation on (X1, X2) and (Y1, Y2) to Uniform Margins."
-#| fig-width: 6
-#| fig-height: 4
-#| fig-dpi: 150
-
-# Apply copula transform
-transformed_x1 <- pnorm(x1)
-transformed_x2 <- pnorm(x2)
-transformed_y1 <- pnorm(y1, mean = mean(y1), sd = sd(y1))
-transformed_y2 <- pnorm(y2, mean = mean(y2), sd = sd(y2))
-
-# Plot transformed datasets
-data.frame(FX1 = transformed_x1, FX2 = transformed_x2, GY1 = transformed_y1, GY2 = transformed_y2) %>%
-  pivot_longer(cols = everything(), names_to = "Variable", values_to = "Value") %>%
-  ggplot(aes(x = Value, y = ifelse(Variable %in% c("FX1", "FX2"), transformed_x2, transformed_y2), color = Variable)) +
-  geom_point(alpha = 0.4) +
-  facet_wrap(~ Variable, scales = "free") +
-  labs(x = "Transformed Value", y =
-
- "Uniform Margins") +
-  theme_minimal()
-```
-
-## Figures
-
-Consider customizing your plot themes per-plot---as we do below to create @fig-wnba-ht<!---->---or changing the default `ggplot()` theme in your document within your `setup` code chunks using `ggplot2::theme_set()`.
-
-If **ggplot2** is loaded, the following code sets the default `ggplot()` theme to `theme_classic()`.
-<!-- 
-The markdown syntax below will use R syntax highlighting to display the code, but it is not a "true" code chunk in the sense that the code is displayed but not evaluated in the rendered document.
--->
-
-```r
-theme_set(theme_classic())
 ```
 
 
@@ -200,6 +43,20 @@ Your tables should be publication quality. Consider using [**gt**](https://gt.rs
 
 @tbl-ht-by-pos shows the average heights of WNBA players by position. 
 
+```{r}
+#| label: tbl-ht-by-pos
+#| tbl-cap: "Average WNBA player height by position."
+
+wnba |> 
+  group_by(position) |> 
+  summarize(mean_ht = mean(height)) |> 
+  gt() |> 
+  cols_label(
+    position = "Position",
+    mean_ht = "Average height (in)"
+  ) |> 
+  fmt_number(decimals = 1)
+```
 
 
 <!-- 

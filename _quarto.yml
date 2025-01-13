@@ -15,12 +15,16 @@ book:
     # Add/remove and edit file names and order as you go
     - 01-ch1-intro.qmd
     - 02-ch2-dep-copula.qmd
+    - 03-ch3-discrete-cc-measures.qmd
+    - 04-ch4-app-of-parallel-computing.qmd
+    - 05-ch5-software-impl.qmd
+    - 06-ch6-conclusion.qmd
     # References must be the last file before the appendices
-    - 03-references.qmd 
+    - 07-references.qmd
   appendices:
-    - 04-app1-code.qmd # Must include
+    - 08-app1-code.qmd # Must include
     # Must include if corrections are made after initial submission
-    - 05-app2-corrections.qmd 
+    - 09-app2-corrections.qmd
 
 # Replace this file with your .bib file
 bibliography: references.bib 
@@ -29,7 +33,7 @@ csl: includes/american-statistical-association.csl
 # Update department, advisors, and submission year with your information
 department: "Mathematics and Statistics"
 advisors: "Professor Shu-Min Liao"
-submitted: 2024
+submitted: 2025
 
 format:
   amherst-thesis-pdf: default

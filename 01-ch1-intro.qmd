@@ -1,32 +1,15 @@
 # Introduction {#sec-intro}
 
-XXX
+<!-- 
 
-## What's in this project directory?
+Plan:
 
-XXX                   
+=> 3-4 pages
+=> no sections
+=> introduce topic with in-text examples
+=> walkthrough the topical evolution in the field 
+=> parallelly mention in-order references to upcoming thesis chapters
 
--   `fig` XXX
-
-::: callout-note
-XXX
-:::
-
-## Quarto workflow
-
-1.  XXX
-
-    -   XXX
-
-
-## Recommended reading before you begin editing
-
-XXX
-
-::: callout-caution
-XXX
-:::
-
-{{< pagebreak >}}
+--> 
 
 XXX

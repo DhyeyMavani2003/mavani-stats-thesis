@@ -1,19 +1,18 @@
-# Abstract {.unnumbered} 
+# Abstract {.unnumbered}
 
-Understanding regression dependencies among discrete variables in categorical data—especially with ordinal responses—is a significant challenge in fields like finance, where the natural order of variables can unlock deeper insights into underlying distributions. While numerous model-based methods have been developed to examine these structures, there is a notable lack of flexible, model-free approaches. To address this gap, SCCRAM, a novel model-free measure based on the checkerboard copula, was introduced to identify and quantify regression dependence in multivariate categorical data involving both ordinal and nominal variables. Building upon this foundation, my thesis focuses on developing scalable implementations of SCCRAM in R and Python, utilizing parallel computing to enhance efficiency and accessibility for large-scale data analysis. Initial simulations confirm the effectiveness of these tools, providing researchers with a powerful resource for exploratory modeling and a deeper investigation into regression dependence structures within complex categorical datasets.
+Understanding regression dependencies among discrete variables in categorical data—especially with ordinal responses—is a significant challenge in fields like finance, where the natural order of variables can unlock deeper insights into underlying distributions and data generating processes (DGPs). While numerous model-based methods have been developed to examine these structures, there is a notable lack of flexible, model-free approaches. To address this gap, a novel model-free measure based on the checkerboard copula, was introduced by @weikim to identify and quantify regression dependence in multivariate categorical data involving both ordinal and nominal variables. Building upon this foundation, my thesis focuses on developing scalable and modularized implementations of discrete checkerboard copula modeling in R and Python, utilizing parallel computing to enhance efficiency and accessibility for large-scale data analysis. Initial experimentation and deployment confirm the effectiveness of these tools, providing researchers with a powerful resource for exploratory modeling and a deeper investigation into regression dependence structures within complex categorical datasets.
 
+# Acknowledgements {.unnumbered}
 
+I want to thank everyone who made my experience unforgettable during my thesis journey. Firstly, I want to convey my gratitude to Professor Shu-Min Liao for advising me throughout my time at Amherst College and believing in me to take on the challenge of developing a statistical software component encompassing her most recent research work. From my first research experience on campus building R-Blocks to introducing me to her research collaborator (Professor Daeyoung Kim), Prof. Liao played a pivotal role in my development. Additionally, I am indebted to Dr. Kim for his continuous encouragement and feedback while developing the software this past year.
 
-# Acknowledgements {.unnumbered} 
+I am also incredibly grateful to my college advisor and statistics major advisor, Professor Nicholas Horton, for always advocating for me and supporting me throughout the Amherst College experience. I also thank Professor Jun Ishii for teaching me Advanced Econometrics and Professor Amy Wagaman for teaching me Advanced Data Analysis, which helped me gain a clear and solid understanding of the foundational tools I could build on in this work.
 
-I would like to thank everyone who made my experience nothing short of amazing during my thesis journey. Firstly, I'd like to convey my gratitude to Professor Shu-Min Liao for advising me through this journey, and for believing in me to take on statistical software component of her most recent research work along with her collaborators. From my first research experience on campus building R-Blocks, she played a pivotal role in my journey.
+Finally, I would like to express gratitude towards my family for their constant belief in my abilities. Special thanks to my mom, dad, sister, grandfather, and grandmother for making me capable of the opportunity to study abroad. Last but not least, I would like to thank my friends, peers, and colleagues on campus, who took courses, worked, and played sports with me. This academic, personal, and professional growth journey would not be possible without their support.
 
-I am also incredibly grateful to my college advisor, and statistics major advisor, Professor Nicholas Horton for always advocating for me and for supporting me throughout the Amherst College experience. I would also like to thank Professor Jun Ishii for teaching me Advanced Econometrics, which helped me gain a really clear understanding on the foundational tools on which I was able to build on in my work.
-
-Finally, I would like to thank my friends and family for their constant belief in my abilities. Special thanks to my mom, dad, sister, grandfather, and grandmother for lending me and making me capable for this opportunity to study abroad. Last, but not the least, I would like to thank my friends, peers, and colleagues on campus, who took courses, worked, and played sports with me. This journey of academic, personal, and professional growth wouldn't be possible without their support.  
-
-
+```{=html}
 <!--
 The following line is required to transition from roman numeral page numbering to regular page numbering. Do not edit or remove. 
 -->
+```
 \cleardoublepage\pagenumbering{arabic}\setcounter{page}{1}

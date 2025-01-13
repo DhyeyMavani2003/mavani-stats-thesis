@@ -1,0 +1,44 @@
+# Software (Package) Implementation and Testing {#sec-simple}
+
+```{r}
+#| label: setup
+#| include: false
+
+# Load packages
+library(tidyverse)
+library(gt)
+
+# Set default ggplot theme for document
+theme_set(theme_classic())
+# If using kableExtra tables, print blank cells instead of `NA`
+options(knitr.kable.NA = "")
+
+# Load data
+load("data/temp_wnba.RData")
+```
+
+Start basic with motivation, and breakdown the implementation and testing phases properly while making sure that they are accessible.
+
+<!-- 
+The following section should be included at the end of each chapter that contains code.
+
+Note that this will include code from code chunks even if `eval` is set to `false`.
+-->
+
+## @sec-simple Code
+
+The following code was used to create @sec-simple.
+
+### Code within chapter
+```{r}
+#| echo: true
+#| eval: false
+#| ref-label: !expr knitr::all_labels()
+```
+
+### Code sourced from external scripts
+```{r}
+#| echo: true
+#| eval: false
+{{< include src/temp02-hello.R >}}
+```
