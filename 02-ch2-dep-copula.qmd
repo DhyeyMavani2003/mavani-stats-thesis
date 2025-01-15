@@ -4,6 +4,12 @@
 #| label: setup
 #| include: false
 
+# Load knitr package
+library(knitr)
+
+# Python Engine Setup
+knit_engines$set(python3 = knit_engines$get("python"))
+
 # Load packages
 library(tidyverse)
 library(gt)
@@ -15,9 +21,64 @@ options(knitr.kable.NA = "")
 
 # Load data
 load("data/temp_wnba.RData")
+
 ```
 
-Make it accessible by starting with a motivating example, then proceed towards more rigorousness gradually until challenges for discrete case are covered.
+<!-- Make it accessible by starting with a motivating example, then proceed towards more rigorousness gradually until challenges for discrete case are covered. -->
+
+In this chapter, we will formalize some aspects of phenomena such as dependence and association. In order to aid us in our understanding, we will use two bivariate random vectors. Along the way, we will visualize and analyze various aspects of their dependence and association through Python code.
+
+Consider $(X_1, X_2)$ and $(Y_1, Y_2)$ be bivariate random vectors, each consisting of 10000 independent data-points, which are distributed with the joint distributions $F$ and $G$ respectively.  
+
+```{python3}
+#| label: fig-motivating-example
+#| fig-cap: "Scatter plots of 10000 independent observations of $(X_1, X_2)$ and $(Y_1, Y_2)$ with bell-shaped curves depicting respective marginal distributions on the sides."
+
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import beta, expon, norm
+
+# Set random seed for reproducibility
+np.random.seed(8990)
+
+# Number of samples
+n = 10000
+
+# Generate data for (X1, X2)
+mean = [0, 0]
+cov = [[1, 0.65], [0.65, 1]]  # Correlation matrix
+X = np.random.multivariate_normal(mean, cov, size=n)
+
+# Transform data for (Y1, Y2)
+Y1 = beta.rvs(5, 10, size=n)
+Y2 = expon.rvs(scale=1, size=n)
+
+# Plot (X1, X2) and (Y1, Y2)
+fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+
+# Scatter plot for (X1, X2)
+axes[0].scatter(X[:, 0], X[:, 1], alpha=0.5, s=5)
+axes[0].set_title("Scatter plot of (X1, X2)")
+axes[0].set_xlabel("X1")
+axes[0].set_ylabel("X2")
+
+# Add marginal histograms
+axes[0].hist(X[:, 0], bins=50, density=True, alpha=0.6, color='blue', orientation='vertical', histtype='step')
+axes[0].hist(X[:, 1], bins=50, density=True, alpha=0.6, color='red', histtype='step', orientation='horizontal')
+
+# Scatter plot for (Y1, Y2)
+axes[1].scatter(Y1, Y2, alpha=0.5, s=5)
+axes[1].set_title("Scatter plot of (Y1, Y2)")
+axes[1].set_xlabel("Y1")
+axes[1].set_ylabel("Y2")
+
+# Add marginal histograms
+axes[1].hist(Y1, bins=50, density=True, alpha=0.6, color='blue', orientation='vertical', histtype='step')
+axes[1].hist(Y2, bins=50, density=True, alpha=0.6, color='red', histtype='step', orientation='horizontal')
+
+plt.tight_layout()
+plt.show()
+```
 
 
 ```{r}
