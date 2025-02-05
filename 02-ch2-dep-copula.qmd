@@ -25,7 +25,9 @@ load("data/temp_wnba.RData")
 
 <!-- Make it accessible by starting with a motivating example, then proceed towards more rigorousness gradually until challenges for discrete case are covered. -->
 
-In this chapter, we will formalize some aspects of phenomena such as dependence and association. In order to aid us in our understanding, we will use two bivariate random vectors. Along the way, we will visualize and analyze various aspects of their dependence and association through Python code.
+In this chapter, we aim to formalize concepts of dependence and association. To facilitate our understanding, we will use two bivariate random vectors and visualize their relationships through Python code.
+
+## Motivating Example
 
 Consider $(X_1, X_2)$ and $(Y_1, Y_2)$ be bivariate random vectors, each consisting of 10000 independent data-points, which are distributed with the joint distributions $F_X$ and $F_Y$ respectively. Given these bivariate vectors, one might ask: How can I compare the relationship between $(X_1,X_2)$ to the relationship between $(Y_1, Y_2)$? One of the measures that can help us compare and contrast these relationships is Pearson correlation coefficient (commonly denoted as $\rho_{pearson}$). After preliminary calculations on a Python3 kernel, we can see that $\rho_{pearson}(X_1, X_2) \approx 0.802$, but on the other hand, the correlation between $\rho_{pearson}(Y_1, Y_2) \approx 0.755$. From these measure-values, it seems that the dependence between $(X_1,X_2)$ is stronger than the dependence between $(Y_1, Y_2)$. Although this agrees with our scatter plots in @fig-motivating-example, it is vital to note that $\rho_{pearson}$ only captures the linear dependence between the underlying random variables at hand.
 
@@ -53,13 +55,13 @@ cov = [[1, 0.8], [0.8, 1]]
 X = np.random.multivariate_normal(mean, cov, size=n)
 X1, X2 = X[:, 0], X[:, 1]
 
-# Transform X1 and X2 to uniform [0, 1] using the CDF of the normal distribution
-U1 = norm.cdf(X1)
-U2 = norm.cdf(X2)
+# Transform U_X1 and U_X2 to uniform [0, 1] using the CDF of the normal distribution
+U_X1 = norm.cdf(X1)
+U_X2 = norm.cdf(X2)
 
-# Transform U1 and U2 into Gamma and Beta distributions
-Y1 = gamma.ppf(U1, 3, 15)
-Y2 = beta.ppf(U2, 5, 3)
+# Transform U_X1 and U_X2 into Gamma and Beta distributions
+Y1 = gamma.ppf(U_X1, a=3, scale=1/15) 
+Y2 = beta.ppf(U_X2, a=5, b=3)
 
 # Calculate Pearson Correlation Coefficients
 rho_X = np.corrcoef(X1, X2)[0, 1]
@@ -129,23 +131,6 @@ For instance, if we know that $X_1 \sim N(0,1) = F_1$, $X_2 \sim N(0,1) = F_2$, 
 # Set random seed for reproducibility
 np.random.seed(8990)
 
-# Number of samples
-n = 10000
-
-# Generate bivariate normal data (X1, X2)
-mean = [0, 0]
-cov = [[1, 0.8], [0.8, 1]]  # Correlation ~ 0.8
-X = np.random.multivariate_normal(mean, cov, size=n)
-X1, X2 = X[:, 0], X[:, 1]
-
-# Transform X1 and X2 to uniform [0, 1] using normal CDF
-U_X1 = norm.cdf(X1)
-U_X2 = norm.cdf(X2)
-
-# Transform uniform marginals to desired distributions
-Y1 = gamma.ppf(U_X1, a=3, scale=1/15) 
-Y2 = beta.ppf(U_X2, a=5, b=3)
-
 # Apply probability integral transformation to all variables to make them uniform
 U_Y1 = gamma.cdf(Y1, a=3, scale=1/15)
 U_Y2 = beta.cdf(Y2, a=5, b=3)
@@ -205,12 +190,171 @@ knitr::include_graphics("fig/transformed_motivating_example.png")
 
 ```
 
-Looking at @fig-transformed-motivating-example, we can see that the transformed data vectors appear to be significantly similar. We can computationally verify this by quickly calculating the $\rho_{pearson}$ for ($F_1(X_1)$, $F_2(X_2)$) and ($G_1(Y_1)$, $G_2(Y_2)$), which turns out to be 0.788 for both data vector pairs, implying that both have same dependence.
+Looking at @fig-transformed-motivating-example, we can see that the transformed data vectors appear to be significantly similar. We can computationally verify this by quickly calculating the $\rho_{pearson}$ for ($F_1(X_1)$, $F_2(X_2)$) and ($G_1(Y_1)$, $G_2(Y_2)$), which turns out to be 0.788 for both data vector pairs, meaning that both have same dependence structures.
+
+An alternative way to approach the problem (of comparing dependence of distinct pairs of marginals), is by transforming the marginals of $(Y_1, Y_2)$ to be normal (same as marginals of $(X_1, X_2)$). As one can predict, in order to accomplish this transformation, we would need to "undo the current distributional mappings on $(Y_1, Y_2)$", which we can formally define as generalized inverse as follows:
+
+::: {#def-quantile-function}
+## Quantile Function
+[@ecmr]
+$F^{\leftarrow}$ (Quantile Function) is defined as $F^{\leftarrow}(y) = \text{inf} \{x \in \mathbb{R} | F(x) \geq y \}$, where $y \in [0, 1]$, and $\text{inf}$ is the infimum of a set.
+:::
+
+:::{.callout-warning}
+The quantile function $F^{\leftarrow} = F^{-1}$ only when $F$ is continuous and strictly increasing. Thus it is important to note that, in other cases, the ordinary inverse $F^{-1}$ need not exist. [@ecmr]
+:::
+
+With the above definition of $F^{\leftarrow}$, let's introduce a lemma from [@ecmr] that will help us perform the transformation to normal.
+
+::: {#lem-quantile-transformation}
+## Quantile Transformation
+[@ecmr]
+Let $U \sim \text{Unif}(0, 1)$ and let $F$ be any distribution function be a distribution function. Then $F^{\leftarrow}(U) \sim F$, that is, $F^{\leftarrow}(X)$ is distributed with density $F$.
+:::
+
+:::{.callout-note}
+@lem-quantile-transformation is valid for non-continuous densities $F$ as well. [@ecmr]
+:::
+
+Let's start with the transformations where we left off in @fig-transformed-motivating-example, since we have uniform densities there. Applying @lem-quantile-transformation on $G_1(Y_1)$ and $G_2(Y_2)$ using quantile functions $F_1^{\leftarrow} = F_1^{-1}$ and $F_2^{\leftarrow} = F_2^{-1}$ respectively gives us that $F_1^{-1}(G_1(Y_1)) \sim F_1$ and $F_2^{-1}(G_2(Y_2)) \sim F_2$. 
+
+```{python3}
+#| label: gen-data-quantile-transformed-motivating-example
+#| echo: false
+#| output: false
+
+# Set random seed for reproducibility
+np.random.seed(8990)
+
+# Transform (Y1, Y2) back to normal marginals using quantile transformation
+F1_Y1 = norm.ppf(gamma.cdf(Y1, a=3, scale=1/15))
+F2_Y2 = norm.ppf(beta.cdf(Y2, a=5, b=3))
+
+# Calculate Pearson Correlation Coefficients
+rho_F_Y = np.corrcoef(F1_Y1, F2_Y2)[0, 1]
+print("Pearson correlation for transformed:", rho_F_Y)
+print("Pearson correlation between X1 and X2:", rho_X)
+
+# Plot the scatter plots with marginal histograms
+fig, axes = plt.subplots(1, 2, figsize=(6, 4))
+
+# Scatter plot for original normal marginals (X1, X2)
+axes[0].scatter(X1, X2, alpha=0.3, s=10)
+axes[0].set_title("Scatter plot ($F_1(X_1)$, $F_2(X_2)$)")
+axes[0].set_xlabel("$F_1(X_1)$")
+axes[0].set_ylabel("$F_2(X_2)$")
+axes[0].hist(X1, bins=50, density=True, alpha=0.6, color='blue', histtype='step')
+axes[0].hist(X2, bins=50, density=True, alpha=0.6, color='red', histtype='step', orientation='horizontal')
+
+# Scatter plot for transformed normal marginals (F1_Y1, F2_Y2)
+axes[1].scatter(F1_Y1, F2_Y2, alpha=0.3, s=10)
+axes[1].set_title("Scatter plot ($F_1^{-1}(G_1(Y_1))$, $F_2^{-1}(G_2(Y_2))$)")
+axes[1].set_xlabel("$F_1^{-1}(G_1(Y_1))$")
+axes[1].set_ylabel("$F_2^{-1}(G_2(Y_2))$")
+axes[1].hist(F1_Y1, bins=50, density=True, alpha=0.6, color='blue', histtype='step')
+axes[1].hist(F2_Y2, bins=50, density=True, alpha=0.6, color='red', histtype='step', orientation='horizontal')
+
+# Layout adjustment and save the figure
+plt.tight_layout()
+fig_path = os.path.join(fig_dir, "quantile_transformed_motivating_example.png")
+plt.savefig(fig_path, dpi=300, bbox_inches="tight")
+
+# Close the figure to prevent rendering output
+plt.close(fig)  
+
+```
+
+```{r}
+#| label: fig-quantile-transformed-motivating-example
+#| fig-cap: "Scatter plots of 10000 independent observations of ($X_1$, $X_2$) and ($F_1^{-1}(G_1(Y_1))$, $F_2^{-1}(G_2(Y_2))$) with overlaid curves depicting respective marginal distributions."
+
+knitr::include_graphics("fig/quantile_transformed_motivating_example.png")
+
+```
+
+Notice in @fig-quantile-transformed-motivating-example that the resulting transformed distribution through this alternative method resembles that of $(X_1, X_2)$. Hence, we can conclude that they have the same dependence. Furthermore, through a quick calculation, we can see that $\rho_{pearson}(F_1^{-1}(G_1(Y_1)), F_2^{-1}(G_2(Y_2))) = 0.802$, which is the same as the Pearson correlation coefficient between $X_1$ and $X_2$. This is the level of flexibility that a combination of transformations presented in @lem-prob-int-trans and @lem-quantile-transformation can lend us.
+
+:::{.callout-note}
+"$(X_1, X_2)$ and $(Y_1, Y_2)$ have the same dependence" $\iff$ "$(X_1, X_2)$ and $(Y_1, Y_2)$ have the same copula" [@ecmr]
+:::
+
+## Copulas: A Unified Framework for Dependence
+
+Copulas are a class of multivariate distribution functions with $Unif(0, 1)$ marginals. The motivating example in the previous section explains the usage of copulas as the structures capturing margin-independent dependence between random variables.
+
+:::{.callout-note}
+The choice of $Unif(0, 1)$ as a post-transformation margin for the data at hand is  somewhat arbitrary although it does simplify further results. One can use modifications of @lem-prob-int-trans and @lem-quantile-transformation to define copulas with respect to any margin of choice without affecting the final conclusions about the dependence between the data at hand. [@ecmr]
+:::
+
+In order to understand copulas better, for now, let's restrict ourselves to the 2-D (2-dimensional) case. Firstly, let's introduce the definition of a broader class of functions called subcopulas as a preliminary, which will help us mathematically define copulas as a special case. [@nelsen]
+
+::: {#def-2d-subcopula}
+## 2-Dimensional Subcopula
+[@Erdely2017]
+A **two-dimensional subcopula** (2-subcopula) is a function $C^S: D_1 \times D_2 \to [0, 1]$, where $\{0, 1\} \subseteq D_i \subseteq [0, 1]$ for $i \in \{1, 2\}$ with the following conditions satisfied:
+
+* _Grounded:_ $C^S(u, 0) = 0 = C^S(0, v)$, $\forall u \in D_1, \forall v \in D_2$.
+
+* _Marginal Consistency:_ $\forall u \in D_1$ and $\forall v \in D_2$, $C^S(u, 1) = u$ and $C^S(1, v) = v$.
+
+* _2-increasing:_ $\forall u_1,u_2 \in D_1$ and $\forall v_1, v_2 \in D_2$ such that $u_1 \leq u_2$ and $v_1 \leq v_2$, $C^S(u_1, v_1) - C^S(u_2, v_1) + C^S(u_2, v_2) - C^S(u_1, v_2) \geq 0$.
+:::
+
+::: {#def-2d-copula}
+## 2-Dimensional Copula
+[@Erdely2017]
+A **two-dimensional copula** (2-copula) is a function $C: [0, 1] \times [0, 1] \to [0, 1]$, with the following conditions satisfied:
+
+* _Grounded:_ $C(u, 0) = 0 = C(0, v)$, $\forall u \in [0, 1], \forall v \in [0, 1]$.
+
+* _Marginal Consistency:_ $\forall u \in [0, 1]$ and $\forall v \in [0, 1]$, $C(u, 1) = u$ and $C(1, v) = v$.
+
+* _2-increasing:_ $\forall u_1,u_2 \in [0, 1]$ and $\forall v_1, v_2 \in [0, 1]$ such that $u_1 \leq u_2$ and $v_1 \leq v_2$, $C(u_1, v_1) - C(u_2, v_1) + C(u_2, v_2) - C(u_1, v_2) \geq 0$.
+:::
+
+:::{.callout-note}
+A 2-D copula is essentially a 2-subcopula with a full unit square as domain ($D_1 = D_2 = [0, 1]$). Furthermore, copula and subcopula are the same within a domain with continuous variables. Later in this chapter, we will discuss why this doesn't hold when one of the variables is discrete. 
+:::
+
+In this work, we will mainly deal with 2-D copulas and subcopulas, but the definitions above can be generalized to n-D case with some notable exceptions detailed (with proofs) in section 2.10 of @nelsen. Moreover, there are many different families of copulas bearing peculiar properties and corresponding margins, we are not covering them in detail since that is not the focus of this work, and a comprehensive summary of many of these families can be found in chapter 3 of @ecmr.
+
+## Fréchet-Hoeffding Bounds
+
+XXX
+
+## Sklar's Theorem and its Corollaries
+
+XXX
+
+## The Invariance Principle
+
+XXX
+
+## Measures of Association and Copula Estimation
+
+XXX
+
+::: {.callout-tip}
+## Note on Moving from Continuous to Discrete Case
+
+Main High-Level Idea
+:::
+
+## Does Everything Work in Discrete Case as well?
+
+XXX + Motivation from end
+
+### Unidentifiability Issue
+
+XXX
+
+### Margin-Dependence of Concordance Association Measures
+
+XXX
 
 
-## Tables
 
-Your tables should be publication quality. Consider using [**gt**](https://gt.rstudio.com/articles/gt.html) [@gt] or  [**kableExtra**](https://cran.r-project.org/web/packages/kableExtra/vignettes/awesome_table_in_pdf.pdf) [@kableExtra] to customize your tables. The [**gtsummary**](https://www.danieldsjoberg.com/gtsummary/) package [@gtsummary] may also come in handy.
+
 
 <!-- 
 The following section should be included at the end of each chapter that contains code.
