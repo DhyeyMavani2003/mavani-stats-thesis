@@ -320,17 +320,86 @@ In this work, we will mainly deal with 2-D copulas and subcopulas, but the defin
 
 ## Fréchet-Hoeffding Bounds
 
-XXX
+For any distribution function, boundedness is always a desired property. In the case of copulas, we have a famous theorem that provides us the upper and lower pointwise bounds.
+
+::: {#thm-fh-bounds}
+## Fréchet-oeffding Bounds
+[@ecmr]
+Given a 2-D copula $C$, $W(u,v) = \max\{0, u+v-1\} \leq C(u,v) \leq \min\{u,v\} = M(u,v)$, where $u, v \in [0,1]$.
+:::
 
 ## Sklar's Theorem and its Corollaries
 
-XXX
+@thm-sklar by [@sklar1959fonctions] is one of the seminal results in copula theory, which extended the applications of copulas, and explained why copulas captures the dependence by relating the joint distributions to univariate margins.
+
+::: {#thm-sklar}
+## Fréchet-oeffding Bounds
+[@ecmr]
+
+1. Let $H$ be a joint distribution function with univariate margins $F$ and $G$. Then there exists a copula $C$ such that $\forall x,y \in \mathbb{R}, H(x,y) = C(F(x), G(y))$. Furthermore, $C$ is **unique** in the case when $F, G$ are continuous; otherwise, in the general case, $C$ is uniquely determined on $\text{Ran}F \times \text{Ran}G$, where $\text{Ran}F, \text{Ran}G$ denote the ranges of $F, G$ respectively. That copula $C$ is given by: $C(u,v)=H(F^{\leftarrow}(u), G^{\leftarrow}(u))$ such that $(u,v) \in \text{Ran}F \times \text{Ran}G$.
+
+2. Conversely, $H$ is defined as a 2-D distribution function with marginals $F, G$, if we are given copula $C$ along with the univariate marginals $F, G$.
+:::
+
+In this work, we will mainly deal with two dimensions, but @thm-sklar above can be generalized to n-D case as detailed in section 2.10 of @nelsen. Below, we include a few insights drawn from [@ecmr] that will be important to our ongoing discussion:
+
+:::{.callout-note}
+@thm-sklar gives us an insight into the name copula as in how it "couples" a joint distribution function to its marginal distributions. This coupling effect and two parts of @thm-sklar show us how we can separate (or combine) multivariate dependence structure and univariate margins.
+:::
+
+:::{.callout-warning}
+## Spoiler Alert
+In the case of continuous random variables, there is only one **unique** copula that characterizes the multivariate dependence structure, which is very convenient for reasons we will discuss later in this chapter. This is not the case with discrete variables, which make the direct use of continuous copulas intractable.
+:::
+
+:::{.callout-note}
+@thm-sklar can be used to verify the existence of a continuous distribution function $H$ in case of a multivariate dataset if and only if we are sure of the existence of corresponding continuous univariate marginals for each variable in the dataset.
+:::
 
 ## The Invariance Principle
 
-XXX
+As we saw in the motivating example, the underlying dependence structure did not change over a certain type of transformations. This was very convenient for us, and thus is a favorable property for a copula to have. This property is often formally referred to as "invariance", which we will formalize in the following theorem from [@ecmr]
+
+::: {#thm-invariance}
+## Invariance Principle
+Let $(X, Y) \sim H$ with continuous margins $F, G$ and copula $C$. If $T_X, T_Y$ are **strictly increasing** transformations on $\text{Ran}X, \text{Ran}Y$, respectively, then $(T_X(X), T_Y(Y))$ also has copula $C$.
+:::
+
+:::{.callout-note}
+@thm-invariance was implicitly in action during our analysis for the motivating example because the transformations that we used were of two kinds, namely, probability integral transformation and quantile transformation, and in both of the cases, we were dealing with continuous and **strictly increasing** mappings on the respective ranges of random variables.
+:::
 
 ## Measures of Association and Copula Estimation
+
+Now that we have built an object (copula) that allows us to just capture the multivariate dependence structure between variables, we would like to encode certain pieces of this information into a set of robust measures or metrics. We would call these measures, the **measures of association**. There are two types of measures of association: parametric and non-parametric. As discussed briefly for our motivating example, a common (parametric) measure of association is the Pearson correlation coefficient ($\rho_{pearson}$). Although it is really efficient to calculate, it only captures linear dependence between the random data vectors at hand. Let's discuss this metric in more detail along with its limitations:
+
+### Pearson's Correlation Coefficient ($\rho_{pearson}$)
+
+::: {#def-pearson}
+## Pearson correlation coefficient
+Given a random vector $(X, Y)$ with $Var(X) < \infty$ and $Var(Y) < \infty$, then:
+
+$$
+\rho_{pearson}(X, Y) = \frac{Cov(X, Y)}{\sqrt{Var(X)}\sqrt{Var(Y)}}
+$$
+, where covariance is defined as: 
+$$
+Cov(X, Y) = \mathbb{E}((X - \mathbb{E}(X))(Y - \mathbb{E}(Y)))
+$$
+, and the variance is defined as $Var(X) = \mathbb{E}((X - \mathbb{E}(X))^2)$.
+:::
+
+
+
+### Spearman's Rho 
+
+XXX
+
+### Kendall's Tau
+
+XXX
+
+### Estimation of the Copula and Measures of Association
 
 XXX
 
