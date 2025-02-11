@@ -323,7 +323,7 @@ In this work, we will mainly deal with 2-D copulas and subcopulas, but the defin
 For any distribution function, boundedness is always a desired property. In the case of copulas, we have a famous theorem that provides us the upper and lower pointwise bounds.
 
 ::: {#thm-fh-bounds}
-## Fréchet-oeffding Bounds
+## Fréchet-Hoeffding Bounds
 [@ecmr]
 Given a 2-D copula $C$, $W(u,v) = \max\{0, u+v-1\} \leq C(u,v) \leq \min\{u,v\} = M(u,v)$, where $u, v \in [0,1]$.
 :::
@@ -333,7 +333,7 @@ Given a 2-D copula $C$, $W(u,v) = \max\{0, u+v-1\} \leq C(u,v) \leq \min\{u,v\} 
 @thm-sklar by [@sklar1959fonctions] is one of the seminal results in copula theory, which extended the applications of copulas, and explained why copulas captures the dependence by relating the joint distributions to univariate margins.
 
 ::: {#thm-sklar}
-## Fréchet-oeffding Bounds
+## Fréchet-Hoeffding Bounds
 [@ecmr]
 
 1. Let $H$ be a joint distribution function with univariate margins $F$ and $G$. Then there exists a copula $C$ such that $\forall x,y \in \mathbb{R}, H(x,y) = C(F(x), G(y))$. Furthermore, $C$ is **unique** in the case when $F, G$ are continuous; otherwise, in the general case, $C$ is uniquely determined on $\text{Ran}F \times \text{Ran}G$, where $\text{Ran}F, \text{Ran}G$ denote the ranges of $F, G$ respectively. That copula $C$ is given by: $C(u,v)=H(F^{\leftarrow}(u), G^{\leftarrow}(u))$ such that $(u,v) \in \text{Ran}F \times \text{Ran}G$.
@@ -373,10 +373,10 @@ Let $(X, Y) \sim H$ with continuous margins $F, G$ and copula $C$. If $T_X, T_Y$
 
 Now that we have built an object (copula) that allows us to just capture the multivariate dependence structure between variables, we would like to encode certain pieces of this information into a set of robust measures or metrics. We would call these measures, the **measures of association**. There are two types of measures of association: parametric and non-parametric. As discussed briefly for our motivating example, a common (parametric) measure of association is the Pearson correlation coefficient ($\rho_{pearson}$). Although it is really efficient to calculate, it only captures linear dependence between the random data vectors at hand. Let's discuss this metric in more detail along with its limitations:
 
-### Pearson's Correlation Coefficient ($\rho_{pearson}$)
+### Pearson's Correlation Coefficient ($\rho_{pearson}$) & its Properties
 
 ::: {#def-pearson}
-## Pearson correlation coefficient
+### Pearson correlation coefficient
 Given a random vector $(X, Y)$ with $Var(X) < \infty$ and $Var(Y) < \infty$, then:
 
 $$
@@ -389,33 +389,141 @@ $$
 , and the variance is defined as $Var(X) = \mathbb{E}((X - \mathbb{E}(X))^2)$.
 :::
 
+Let's start by going over some commonly-used properties of $\rho_{pearson}$ as mentioned in @ecmr:
 
+1. $\rho_{pearson} \in [-1, 1]$
 
-### Spearman's Rho 
+2. $|\rho_{pearson}(X, Y)|$ = 1 if and only if $\exists a,b \in \mathbb{R}$, with $a \neq 0$ such that $Y = aX + b$ almost surely with $a < 0$ if and only if $\rho_{pearson}(X, Y) = -1$, and $a > 0$ if and only if $\rho_{pearson}(X, Y) = 1$. In both cases, $X, Y$ are called _perfectly linearly dependent_
 
-XXX
+3. If $X$ and $Y$ ar independent, then $\rho_{pearson}(X, Y) = 0$.
+
+4. $\rho_{pearson}$ is invariant under _strictly increasing linear_ transformations.
+
+### Limitations of Pearson's Correlation Coefficient ($\rho_{pearson}$)
+
+Although Pearson’s correlation coefficient $\rho_{\text{pearson}}$ is useful in many cases, it only captures **linear dependence** and ignores non-linear relationships. Below, we summarize its key limitations along with illustrative examples.
+
+1. **Non-Existence of $\rho_{pearson}$:** Pearson's correlation does not exist for every random vector $(X, Y)$, particularly when variances (or other higher order moments) are undefined.
+
+:::{.callout-note}
+## Example: Heavy-Tailed Distributions
+Consider two independent random variables $X_1, X_2$ drawn from a **Pareto(3)** distribution with $F(x) = 1 - x^{-3}, \quad x \geq 1$. Define $X = X_1$, and $Y = X_1^2$. The covariance is given by $Cov(X, Y) = Cov(X_1, X_1^2) = \mathbb{E}(X_1^3) - \mathbb{E}(X_1)\mathbb{E}(X_1^2)$. For Pareto(3), it is well-known (and can be easily proven) that $\mathbb{E}(X_1^3)$ **does not exist** (as the integral diverges). Since Pearson's formula rely on this moment, $\rho_{pearson}(X, Y)$ **doesn't exist**. On the other hand, we can observe that $Y = X^2$ shows a **perfect functional dependence**, since $Y$ can be represented as a deterministic (quadratic) function of $X$.
+:::
+
+2. **Non-Invariance Under Non-Linear Transformations:** $\rho_{pearson}$ is not necessarily invariant under all strictly increasing transformations on $\text{Ran}X$ or $\text{Ran}Y$.
+
+:::{.callout-note}
+## Example: Logarithmic Transformation on $U(0, 1)$
+Let $X \sim U(0,1)$ and define $Y = \log(X)$. Pearson’s correlation is: $\rho_{\text{pearson}}(X, Y) = \frac{\text{Cov}(X, \log X)}{\sigma_X \sigma_Y}$. Even though$Y = \log(X)$ is a **strictly increasing function**, $\rho_{pearson}$ changes under this transformation. Thus, Pearson's correlation is **not invariant** under (non-linear) monotonic transformations such as $\log$ in certain situations.
+:::
+
+3. **Uncorrelatedness Does Not Imply Independence:** $\rho_{pearson} = 0$ does NOT necessarily imply that $(X, Y)$ are independent.
+
+:::{.callout-note}
+## Example: Quadratic Transformation on $U(-1, 1)$
+Let $X \sim U(-1,1)$ and define: $Y = X^2$. We can compute: $\mathbb{E}[X] = 0, \quad \mathbb{E}[Y] = \mathbb{E}[X^2] = \frac{1}{3}$. Now, consider the covariance: $\text{Cov}(X, Y) = \mathbb{E}[XY] - \mathbb{E}[X] \mathbb{E}[Y] = \mathbb{E}[X^3] - (0)(\frac{1}{3})$. Since $\mathbb{E}[X^3] = 0$, we get $\text{Cov}(X, Y) = 0$. Thus, $\rho_{\text{pearson}}(X, Y) = 0$, but **$X$ and $Y$ are clearly dependent**, since knowing $X$ exactly determines $Y$. This example demonstrates that a zero Pearson correlation does **not** imply statistical independence.
+:::
+
+4. **Non-Uniqueness of the Joint Distribution Given Marginals and $\rho_{pearson}$:** The marginal distributions and the correlation coefficient do not uniquely determine the joint distribution. 
+
+:::{.callout-note}
+## Example: Bivariate Normal and Mixture Distributions
+Consider two bivariate distributions:
+
+1. **Bivariate Normal Distribution**:  
+   $$
+   (X_1, X_2) \sim N \left( \begin{bmatrix} 0 \\ 0 \end{bmatrix}, \begin{bmatrix} 1 & 0.5 \\ 0.5 & 1 \end{bmatrix} \right).
+   $$
+
+2. **Bivariate Mixture Distribution** (Same Marginals, Different Dependence):  
+   $$
+   X_1 \sim N(0,1), \quad X_2 = \begin{cases} 
+   X_1, & \text{with probability } 0.75, \\
+   -X_1, & \text{with probability } 0.25.
+   \end{cases}
+   $$
+
+Both cases yield: $\rho_{pearson}(X_1, X_2) = 0.5$.
+
+However, their **joint distributions are completely different**, meaning **$\rho_{pearson}$ does not uniquely determine dependence**.
+:::
+
+5. **Unattainability of Certain Correlations:** Given margins $F_1, F_2$, some $\rho_{pearson} \in [-1,1]$ values cannot be attained by choosing any possible copula for $(X_1, X_2)$. An example demonstrating this can be found in @ecmr p.46
+
+In order to circumvent some of the limitations of pearson coefficient, we now consider rank-based correlation measures such as Spearman's Rho ($\rho_{spearman}$) and Kendall's Tau ($\tau_{kendall}$) as they only depend on the underlying copula $C$ at least in the case of continuous random variables. Again, we will discuss the pecularities of the discrete case later in this chapter.
+
+These rank-based measures are also known as **measures of concordance**. [@ecmr] In order to better understand this, we would first need to define _concordance_. Consider two points in $\mathbb{R}^2$, $(x_1, y_1)$ and $(x_2, y_2)$. These points are defined as concordant if $(x_1 - x_2)(y_1 - y_2) > 0$ and discordant if $(x_1 - x_2)(y_1 - y_2) < 0$.
 
 ### Kendall's Tau
 
-XXX
+::: {#def-kendalls-tau}
+### Kendall's Tau
+Given a bivariate random vector $(X_1, X_2)$ with continuous marginals $F_1$ and $F_2$, let's define $(X_1', X_2')$ as an independent copy of $(X_1, X_2)$. Then the population version of Kendall's tau is defined by:
 
-### Estimation of the Copula and Measures of Association
-
-XXX
-
-::: {.callout-tip}
-## Note on Moving from Continuous to Discrete Case
-
-Main High-Level Idea
+$$
+\tau_{kendall}(X_1, X_2) = \mathbb{E}(\text{sign}((X_1 - X_1')(X_2 - X_2')))
+$$
+Here, $\text{sign}(x)$ is the sign-function defined in a piecewise manner as follows:
+$$
+\text{sign}(x) = \begin{cases} 
+   -1, & \text{if } x < 0, \\
+   0, & \text{if } x = 0, \\
+   1, & \text{if } x > 0.
+   \end{cases}
+$$
 :::
 
-## Does Everything Work in Discrete Case as well?
+Using the above-mentioned notion of concordance, definition of an expected value, and @def-kendalls-tau, we can equivalently define Kendall's Tau as $\tau_{kendall} = (1)\mathbb{P}((X_1 - X_1')(X_2 - X_2') > 0) + (0)\mathbb{P}((X_1 - X_1')(X_2 - X_2') = 0) + (-1)\mathbb{P}((X_1 - X_1')(X_2 - X_2') < 0) = \mathbb{P}((X_1 - X_1')(X_2 - X_2') > 0) - \mathbb{P}((X_1 - X_1')(X_2 - X_2') < 0)$, since in the case of continuous distributions, probability at any given point is 0, specifically $\mathbb{P}((X_1 - X_1')(X_2 - X_2') = 0) = 0$. 
 
-XXX + Motivation from end
+As mentioned in @ecmr p.53, we can represent $\tau_{kendall}$ in terms of an underlying copula $C$ as $\tau_{kendall}(C) = 4 \int_{[0, 1]^2}C(u,v)d(C(u,v)) - 1$.  
+
+### Spearman's Rho 
+
+::: {#def-spearman}
+### Spearman's Rho
+Given a bivariate random vector $(X_1, X_2)$ with continuous marginals $F_1$ and $F_2$, then the population version of Spearman's rho is defined by:
+
+$$
+\rho_{spearman}(X_1, X_2) = \rho_{pearson}(F_1(X_1), F_2(X_2))
+$$
+We can observe that the Spearman's rho is nothing but Pearson's correlation coefficient of the transformed variables obtained after performing the Probability Integral Transformation defined earlier in @lem-prob-int-trans.
+:::
+
+As mentioned in @ecmr p.53, we can represent $\rho_{spearman}$ in terms of an underlying copula $C$ as $\rho_{spearman}(C) = 12 \int_{[0, 1]^2}C(u,v)d((u,v)) - 3$.
+
+
+:::{.callout-note}
+## Note:
+$\tau_{kendall}$ and $\rho_{spearman}$ both overcome the significant limitations of $\rho_{pearson}$ with the following properties as summarized in @ecmr:
+
+* These measures always exist, and are invariance under all (not just linear) strictly increasing tranformations
+
+* These measures attain all values in $[-1, 1]$, and they specifically attain -1 and 1 when the copula $C$ attains the Fréchet-Hoeffding bounds $W$ and $M$ as defined in @thm-fh-bounds
+
+:::
+
+## Does Everything Work in the Discrete Case as Well?
+
+Up to this point, our discussion has centered on continuous random variables. Many of the results and definitions we have used rely on continuity, which ensures that the probability integral transform (PIT) maps each variable to a uniform distribution on $[0,1]$. This property, in turn, guarantees the uniqueness of the copula associated with a joint distribution via Sklar’s theorem. In our earlier work, we have taken this uniqueness for granted.
+
+However, real-world data are often **discrete**. When dealing with discrete random variables, the marginal distribution functions are not continuous, and the PIT no longer produces uniform random variables on the full interval $[0,1]$. Instead, we obtain what is known as a **subcopula**—a function defined only on a proper subset of $[0,1]^2$, namely on the ranges of the marginal distributions.
+
+::: {.callout-note}
+## Example: Bivariate Bernoulli Distribution
+
+*Imagine a bivariate distribution where each variable follows a Bernoulli law. In this setting, the only possible values for each variable are 0 and 1. The resulting subcopula is then defined on the set of points. Because this set is a proper subset of $[0,1]^2$, the corresponding copula is not uniquely determined by the joint distribution of the variables.*
+
+:::
 
 ### Unidentifiability Issue
 
-XXX
+Now, let us examine the unidentifiability problem in more detail. To illustrate the issue, consider the following adapted example in the two-dimensional case, inspired by @Geenens. Suppose we have a subcopula $C^S$ defined on a discrete domain, where $D_1=\operatorname{Ran}(F)$ and $D_2=\operatorname{Ran}(G)$ with the marginal distribution functions $F$ and $G$, respectively. In the continuous case, a two-dimensional (sub)copula is defined on the entire unit square $[0,1]^2$. By contrast, for discrete random variables, the subcopula $C^S$ is only uniquely specified on the domain $D_1 \times D_2 = \operatorname{Ran}(F) \times \operatorname{Ran}(G)$.
+
+To obtain a full copula $C$ on $[0,1]^2$, one must “fill in” the gaps—that is, extend the definition of $C^S$ to those parts of the unit square not covered by $D_1 \times D_2$. Unfortunately, there are uncountably many ways to perform this extension while still satisfying the fundamental properties required of a copula in its @def-2d-copula. This leads to a **non-uniqueness** (or **unidentifiability**) issue, which complicates both the development and the application of copula-based models for discrete data. This unidentifiability has been examined in depth in the literature such as @Geenens, and it calls into question the straightforward (direct) application of copula methods when at least one margin is discrete.
+
+One of the ways to fill in the gaps is by performaing a Distributional Transform, which basically serves to add random "noise" to each of the gaps in parent distribution as described by @RUSCHENDORF and @Faugeras. Formally, considering a random variable $X \sim F$ and independently, consider $V \sim U(0,1)$, then the distributional transform of $X$ is $F(X, V) = P(X < x) + V * P(X = x)$. After applying this, we can directly proceed to apply results from continuous copula modeling as we have smoothened out the discontinuities. Another method that also accomplishes this goal is described in the next chapter.
+
+
 
 ### Margin-Dependence of Concordance Association Measures
 
