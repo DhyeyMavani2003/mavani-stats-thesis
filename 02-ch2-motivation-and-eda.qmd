@@ -1,0 +1,30 @@
+# Motivation and Exploratory Data Analysis (EDA) {#sec-motiv-eda}
+
+```{r}
+#| label: setup
+#| include: false
+
+# Load packages
+library(tidyverse)
+library(gt)
+
+# Set default ggplot theme for document
+theme_set(theme_classic())
+# If using kableExtra tables, print blank cells instead of `NA`
+options(knitr.kable.NA = "")
+
+# Load data
+load("data/temp_wnba.RData")
+```
+
+Start with motivation and connect with how papers and book mention it.
+
+For this chapter 2, you need to read some references concerning two topics :
+
+1) Importance of EDA in statistical analysis and data science
+
+2) non-model-based (or model-free) association measures for categorical data.
+
+To this end, you may want to read references in cited in Wei and Kim (2021) and a book chapter that Professor Liao sent you. 
+
+2.3 limitations (ref book and JMA2021), and mention how our thing CCRAM and SCCRAM are valid for n-dimensions (extensibility)

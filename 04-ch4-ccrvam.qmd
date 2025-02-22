@@ -1,0 +1,51 @@
+# Checkerboard Copula Regression, its Visualization and Association measure for Model-Free Regression Dependence Analysis of Multivariate Discrete Data {#sec-ccrvam}
+
+```{r}
+#| label: setup
+#| include: false
+
+# Load packages
+library(tidyverse)
+library(gt)
+
+# Set default ggplot theme for document
+theme_set(theme_classic())
+# If using kableExtra tables, print blank cells instead of `NA`
+options(knitr.kable.NA = "")
+
+# Load data
+load("data/temp_wnba.RData")
+```
+
+This Chapter is a review of Wei and Kim (2021) and  a book chapter that Professor Liao sent you. Along the way, you can reference chapter 5 for 1-on-1 user correspondence to the package.
+
+## Set-up for Multivariate Categorical Data 
+Multivariate Categorical Data of interest for us is Multi-dimensional Contingency Table with an Ordinal Response Variable and a set of categorical (nominal/ordinal) Predictors
+
+## Checkerboard Copula and its Density 
+
+XXX
+
+## Checkerboard Copula Score
+
+XXX
+
+## Checkerboard Copula Regression, Prediction and Visualization 
+
+- You can use CCR as an acronym for Checkerboard Copula Regression
+
+- The CCR and its prediction is designed to explore and identify the potential regression association between an ordinal response variable and a set of categorical predictors of interest
+
+-  Point Prediction of the category of the ordinal dependent variable 
+
+- Uncertainty Evaluation of the CCR prediction using nonparametric bootstrap 
+
+## Checkerboard Copula Regression Association Measure
+
+- You can use SCCRAM as an acronym for  (Scaled) Checkerboard copula Regression Association Measure
+ 
+- (S)CCRAM is designed to quantify the regression association identified by Checkerboard Copula Regression and its prediction.
+
+- Uncertainty Evaluation of the estimated (S)CCRAM using nonparametric bootstrap distribution and its confidence interval
+
+- Statistical significance of the estimated (S)CCRAM using Permutation distribution and its hypothesis testing

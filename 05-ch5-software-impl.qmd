@@ -17,28 +17,55 @@ options(knitr.kable.NA = "")
 load("data/temp_wnba.RData")
 ```
 
-Start basic with motivation, and breakdown the implementation and testing phases properly while making sure that they are accessible.
+Motivation + mention how we address the gap in presence of scalable well-tested tool
 
-<!-- 
-The following section should be included at the end of each chapter that contains code.
+## Set-up and Example Data
 
-Note that this will include code from code chunks even if `eval` is set to `false`.
--->
+Multi-dimensional contingency table with an ordinal response variable and a set of categorical (nominal/ordinal) explanatory variables/predictors
 
-## @sec-simple Code
+## Types of Input Data Supported
 
-The following code was used to create @sec-simple.
+XXX
 
-### Code within chapter
-```{r}
-#| echo: true
-#| eval: false
-#| ref-label: !expr knitr::all_labels()
-```
+dat, txt, csv - for cases form
 
-### Code sourced from external scripts
-```{r}
-#| echo: true
-#| eval: false
-{{< include src/temp02-hello.R >}}
-```
+np.arry directly with adjacent dicts - for contingency table
+
+## Checkerboard copula score (especially an ordinal response variable)
+
+XXX
+
+## Checkerboard copula Regression (CCR)
+
+XXX
+
+## CCR Prediction and Visualization 
+
+-  Point Prediction of the category of the ordinal dependent variable 
+
+- Uncertainty Evaluation of the CCR prediction using nonparametric bootstrap 
+
+
+## (Scaled) Checkerboard copula Regression Association Measure
+
+- (S)CCRAM : quantify the regression association identified by Checkerboard Copula Regression and its prediction.
+
+- Uncertainty Evaluation of the estimated (S)CCRAMs using nonparametric bootstrap distribution and its confidence interval
+
+- Statistical significance of the estimated (S)CCRAMs using Permutation distribution and its hypothesis testing
+
+## Visualization of Dependence Structures
+
+XXX
+
+## Software Architecture and Design Principles
+
+XXX
+
+## Testing, Validation, and Performance Evaluation
+
+XXX
+
+## User Documentation and Example Workflows
+
+XXX

@@ -1,0 +1,26 @@
+# Real Data Analysis {#sec-rda}
+
+```{r}
+#| label: setup
+#| include: false
+
+# Load packages
+library(tidyverse)
+library(gt)
+
+# Set default ggplot theme for document
+theme_set(theme_classic())
+# If using kableExtra tables, print blank cells instead of `NA`
+options(knitr.kable.NA = "")
+
+# Load data
+load("data/temp_wnba.RData")
+```
+
+XXX
+
+## Dataset 
+
+Describe data at hand 
+
+- give reminder of different ways of initializing cc
