@@ -28,9 +28,13 @@ contributes:
       block-headings: false
       colorlinks: true
       linestretch: 2
-      code-block-bg: "#f8f8f8"
-      code-block-border-left: true
-      highlight-style: atom-one
+      code-block-bg: "#edeff2"
+      code-block-border-left: false
+      code-copy: true
+      highlight-style: github
+      code-font-size: 8pt
       template-partials:
         - "before-title.tex"
         - "title.tex"
+  ipynb-shell-interactivity: all
+  code-overflow: wrap

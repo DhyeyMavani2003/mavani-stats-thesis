@@ -1,0 +1,374 @@
+# Code availability {#sec-code}
+
+```{r}
+#| label: setup
+#| include: false
+
+# Load knitr package
+library(knitr)
+
+# Load packages
+library(tidyverse)
+library(gt)
+
+# Set default ggplot theme for document
+theme_set(theme_classic())
+# If using kableExtra tables, print blank cells instead of `NA`
+options(knitr.kable.NA = "")
+```
+
+<!--
+The following reproducibility statement template is courtesy of Rob J. Hyndman and his Monash thesis template at https://robjhyndman.com/hyndsight/quarto_templates.html.
+
+Though it is recommended to include such a statement, the statement is optional and it should not be included if not true!
+
+You can learn more about the **renv** package here:
+https://rstudio.github.io/renv/articles/renv.html
+-->
+
+This thesis is written using Quarto with **renv** [@renv] to create a reproducible environment. All materials required to reproduce this document—including data sets, source files, and implementation code—are publicly available in the GitHub repository [github.com/DhyeyMavani2003/ccrvam](https://github.com/DhyeyMavani2003/ccrvam). The repository contains the complete codebase for the CCRVAM methodology, including the test suite that verifies correct implementation.
+
+This work is licensed under a [Creative Commons  Attribution-NonCommercial-ShareAlike 4.0 International License](http://creativecommons.org/licenses/by-nc-sa/4.0/).
+
+Contributors are welcome to submit issues or pull requests to the GitHub repository to help improve the methodology and its implementation.
+<!--
+
+https://github.com/quarto-dev/quarto-cli/discussions/6650
+
+The type of code chunk below will correctly print all code within the same .qmd file but *cannot* pull code from other .qmd files within a project.
+
+-->
+
+<!--
+Include all source code below
+-->
+
+## @sec-exposition Code
+
+The following code was used to create @sec-exposition. The motivating example in @sec-exposition demonstrates how correlation measures can vary dramatically under nonlinear transformations while copula-based measures remain invariant. The code generates bivariate normal data and transforms it via gamma and beta distributions to illustrate this phenomenon:
+
+```{python}
+#| label: gen-data-motivating-example
+#| eval: false
+#| echo: true
+#| output: false
+
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import beta, expon, norm, gamma, binom
+import os
+
+# Create directory if not exists
+fig_dir = "fig"
+os.makedirs(fig_dir, exist_ok=True)
+
+# Generate Data
+np.random.seed(8990)
+n = 10000
+mean = [0, 0]
+cov = [[1, 0.8], [0.8, 1]]
+X = np.random.multivariate_normal(mean, cov, size=n)
+X1, X2 = X[:, 0], X[:, 1]
+
+# Transform U_X1 and U_X2 to uniform [0, 1] 
+# using the CDF of the normal distribution
+U_X1 = norm.cdf(X1)
+U_X2 = norm.cdf(X2)
+
+# Transform U_X1 and U_X2 into Gamma and Beta distributions
+Y1 = gamma.ppf(U_X1, a=3, scale=1/15) 
+Y2 = beta.ppf(U_X2, a=5, b=3)
+
+# Calculate Pearson Correlation Coefficients
+rho_X = np.corrcoef(X1, X2)[0, 1]
+rho_Y = np.corrcoef(Y1, Y2)[0, 1]
+print("Pearson correlation for (X1, X2):", rho_X)
+print("Pearson correlation for (Y1, Y2):", rho_Y)
+
+# Create Layout design and Set Size-Ratio
+fig, axes = plt.subplots(1, 2, figsize=(6, 4))
+
+# Scatter plot for (X1, X2)
+axes[0].scatter(X1, X2, alpha=0.3, s=5)
+axes[0].set_title("Scatter plot of (X1, X2)")
+axes[0].set_xlabel("X1")
+axes[0].set_ylabel("X2")
+
+# Add marginal histograms
+axes[0].hist(
+  X1, bins=50, density=True, alpha=0.9, color='blue',
+  orientation='vertical', histtype='step'
+)
+axes[0].hist(
+  X2, bins=50, density=True, alpha=0.9, color='red',
+  histtype='step', orientation='horizontal'
+)
+
+# Scatter plot for (Y1, Y2)
+axes[1].scatter(Y1, Y2, alpha=0.3, s=5)
+axes[1].set_title("Scatter plot of (Y1, Y2)")
+axes[1].set_xlabel("Y1")
+axes[1].set_ylabel("Y2")
+
+# Add marginal histograms
+axes[1].hist(
+  Y1, bins=50, density=True, alpha=0.9, color='blue',
+  orientation='vertical', histtype='step'
+)
+axes[1].hist(
+  Y2, bins=50, density=True, alpha=0.9, color='red',
+  histtype='step', orientation='horizontal'
+)
+
+# Organize into a tight layout as per matplotlib
+plt.tight_layout()
+
+# Save figure instead of showing it
+fig_path = os.path.join(fig_dir, "motivating_example.png")
+plt.savefig(fig_path, dpi=300, bbox_inches='tight')
+
+# Close the figure to prevent rendering output
+plt.close(fig)  
+```
+
+```{python}
+#| label: gen-data-transformed-motivating-example
+#| eval: false
+#| echo: true
+#| output: false
+
+# Set random seed for reproducibility
+np.random.seed(8990)
+
+# Apply probability integral transformation to all variables
+# in order to make them uniform
+U_Y1 = gamma.cdf(Y1, a=3, scale=1/15)
+U_Y2 = beta.cdf(Y2, a=5, b=3)
+
+# Calculate Pearson Correlation Coefficients
+rho_U_X = np.corrcoef(U_X1, U_X2)[0, 1]
+rho_U_Y = np.corrcoef(U_Y1, U_Y2)[0, 1]
+print("Pearson correlation for ($F_1(X_1)$, $F_2(X_2)$):", rho_U_X)
+print("Pearson correlation for ($G_1(Y_1)$, $G_2(Y_2)$):", rho_U_Y)
+
+# Combine transformed data
+uniform_data = np.vstack([U_X1, U_X2, U_Y1, U_Y2]).T
+
+# Verify the uniformity of transformed data (Should be 0.5 in value)
+print("U_X1 mean:", U_X1.mean(), "U_X2 mean:", U_X2.mean())
+print("U_Y1 mean:", U_Y1.mean(), "U_Y2 mean:", U_Y2.mean())
+
+# Create Layout design and Set Size-Ratio
+fig, axes = plt.subplots(1, 2, figsize=(6, 4))
+
+# Scatter plot for (U_X1, U_X2)
+axes[0].scatter(U_X1, U_X2, alpha=0.3, s=5)
+axes[0].set_title("Scatter plot of ($F_1(X_1)$, $F_2(X_2)$)")
+axes[0].set_xlabel("$F_1(X_1)$")
+axes[0].set_ylabel("$F_2(X_2)$")
+
+# Add marginal histograms
+axes[0].hist(
+  U_X1, bins=50, density=True, alpha=0.9, color='blue',
+  orientation='vertical', histtype='step'
+)
+axes[0].hist(
+  U_X2, bins=50, density=True, alpha=0.9, color='red',
+  histtype='step', orientation='horizontal'
+)
+
+# Scatter plot for (U_Y1, U_Y2)
+axes[1].scatter(U_Y1, U_Y2, alpha=0.3, s=5)
+axes[1].set_title("Scatter plot of ($G_1(Y_1)$, $G_2(Y_2)$)")
+axes[1].set_xlabel("$G_1(Y_1)$")
+axes[1].set_ylabel("$G_2(Y_2)$")
+
+# Add marginal histograms
+axes[1].hist(
+  U_Y1, bins=50, density=True, alpha=0.9, color='blue',
+  orientation='vertical', histtype='step'
+)
+axes[1].hist(
+  U_Y2, bins=50, density=True, alpha=0.9, color='red',
+  histtype='step', orientation='horizontal'
+)
+
+# Organize into a tight layout as per matplotlib
+plt.tight_layout()
+
+# Save figure instead of showing it
+fig_path = os.path.join(fig_dir, "transformed_motivating_example.png")
+plt.savefig(fig_path, dpi=300, bbox_inches='tight')
+
+# Close the figure to prevent rendering output
+plt.close(fig)  
+```
+
+```{python}
+#| label: gen-data-quantile-transformed-motivating-example
+#| eval: false
+#| echo: true
+#| output: false
+
+# Set random seed for reproducibility
+np.random.seed(8990)
+
+# Transform (Y1,Y2) back to normal marginals using quantile transformation
+F1_Y1 = norm.ppf(gamma.cdf(Y1, a=3, scale=1/15))
+F2_Y2 = norm.ppf(beta.cdf(Y2, a=5, b=3))
+
+# Calculate Pearson Correlation Coefficients
+rho_F_Y = np.corrcoef(F1_Y1, F2_Y2)[0, 1]
+print("Pearson correlation for transformed:", rho_F_Y)
+print("Pearson correlation between X1 and X2:", rho_X)
+
+# Plot the scatter plots with marginal histograms
+fig, axes = plt.subplots(1, 2, figsize=(6, 4))
+
+# Scatter plot for original normal marginals (X1, X2)
+axes[0].scatter(X1, X2, alpha=0.3, s=10)
+axes[0].set_title("Scatter plot ($F_1(X_1)$, $F_2(X_2)$)")
+axes[0].set_xlabel("$F_1(X_1)$")
+axes[0].set_ylabel("$F_2(X_2)$")
+axes[0].hist(
+  X1, bins=50, density=True, alpha=0.6, color='blue', histtype='step'
+)
+axes[0].hist(
+  X2, bins=50, density=True, alpha=0.6, color='red',
+  histtype='step', orientation='horizontal'
+)
+
+# Scatter plot for transformed normal marginals (F1_Y1, F2_Y2)
+axes[1].scatter(F1_Y1, F2_Y2, alpha=0.3, s=10)
+axes[1].set_title(
+  "Scatter plot ($F_1^{-1}(G_1(Y_1))$, $F_2^{-1}(G_2(Y_2))$)"
+)
+axes[1].set_xlabel("$F_1^{-1}(G_1(Y_1))$")
+axes[1].set_ylabel("$F_2^{-1}(G_2(Y_2))$")
+axes[1].hist(
+  F1_Y1, bins=50, density=True, alpha=0.6, color='blue', histtype='step'
+)
+axes[1].hist(
+  F2_Y2, bins=50, density=True, alpha=0.6, color='red',
+  histtype='step', orientation='horizontal'
+)
+
+# Layout adjustment and save the figure
+plt.tight_layout()
+fig_path = os.path.join(
+  fig_dir, "quantile_transformed_motivating_example.png"
+)
+plt.savefig(fig_path, dpi=300, bbox_inches="tight")
+
+# Close the figure to prevent rendering output
+plt.close(fig)  
+
+```
+
+## @sec-ccrvam Code
+
+The following code was used to create @sec-ccrvam. The code below creates the visual representation of a checkerboard copula density function that serves as the foundation for our methodology:
+
+```{python}
+#| label: copula-density
+#| eval: false
+#| echo: true
+#| output: false
+
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.colors as colors
+
+def create_copula_density_plot():
+    # Create figure
+    fig, ax = plt.subplots(figsize=(3, 3))
+    
+    # Define grid divisions
+    u1_divisions = np.array([0, 2/8, 3/8, 5/8, 6/8, 1])
+    u2_divisions = np.array([0, 2/8, 4/8, 1])
+    
+    # Determine the number of blocks
+    n_rows = len(u1_divisions) - 1
+    n_cols = len(u2_divisions) - 1
+    
+    # Create meshgrid for the full plot
+    du1 = np.diff(u1_divisions)
+    du2 = np.diff(u2_divisions)
+    
+    # Define the density values in each block
+    # 0: light blue, 2: purple, 4: magenta
+    # Reshaping the density values to match the grid structure
+    density_values = np.array([
+        [0, 0, 2],  # Bottom row (U1 from 0 to 2/8)
+        [0, 4, 0],  # Second row (U1 from 2/8 to 3/8)
+        [4, 0, 0],  # Third row (U1 from 3/8 to 5/8)
+        [0, 4, 0],  # Fourth row (U1 from 5/8 to 6/8)
+        [0, 0, 2],  # Top row (U1 from 6/8 to 1)
+    ])
+    
+    # Create colormap for the specific values (0, 2, 4)
+    cmap = colors.ListedColormap(['lightblue', 'violet', 'magenta'])
+    bounds = [-0.5, 0.5, 2.5, 4.5]
+    norm = colors.BoundaryNorm(bounds, cmap.N)
+    
+    # Plot the piecewise constant density
+    for i in range(n_rows):
+        for j in range(n_cols):
+            value = density_values[i, j]
+            rect = plt.Rectangle(
+                (u2_divisions[j], u1_divisions[i]), 
+                du2[j], du1[i], 
+                facecolor=cmap(norm(value)),
+                alpha=1.0,
+                edgecolor='black',
+                linewidth=0.5
+            )
+            ax.add_patch(rect)
+            
+            # Add text with density value
+            ax.text(
+                u2_divisions[j] + du2[j]/2,
+                u1_divisions[i] + du1[i]/2,
+                str(int(value)),
+                horizontalalignment='center',
+                verticalalignment='center',
+                fontsize=16,
+                color='black'
+            )
+    
+    # Set axis labels and limits
+    ax.set_xlabel('$U_2$', fontsize=14)
+    ax.set_ylabel('$U_1$', fontsize=14)
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    
+    # Add grid lines at each division
+    for u in u1_divisions:
+        ax.axhline(y=u, color='black', linestyle=':', linewidth=1)
+    for u in u2_divisions:
+        ax.axvline(x=u, color='black', linestyle=':', linewidth=1)
+    
+    # Add colorbar
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+    sm.set_array([])
+    cbar = plt.colorbar(sm, ax=ax, ticks=[0, 2, 4])
+    cbar.set_label('')
+    
+    # Add title
+    fig.text(
+      0.5, 0.05, "Copula density $c^+(u_1, u_2)$",
+      ha='center', fontsize=14
+    )
+    
+    # Adjust layout
+    plt.tight_layout(rect=[0, 0.07, 1, 1])
+    
+    return fig
+
+# Generate the plot
+fig = create_copula_density_plot()
+
+# For .qmd file, you would save the figure
+plt.savefig('fig/copula_density_plot.png', dpi=300, bbox_inches='tight')
+plt.close(fig)
+```

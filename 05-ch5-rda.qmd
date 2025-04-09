@@ -1,0 +1,438 @@
+# Real Data Analysis {#sec-rda}
+
+```{r}
+#| label: setup
+#| include: false
+
+# Load knitr package
+library(knitr)
+
+# Load packages
+library(tidyverse)
+library(gt)
+
+# Set default ggplot theme for document
+theme_set(theme_classic())
+# If using kableExtra tables, print blank cells instead of `NA`
+options(knitr.kable.NA = "")
+
+opts_chunk$set(
+  tidy=FALSE, # display code as typed
+  size="small" # slightly smaller font for code
+)
+```
+
+```{bash}
+#| label: install-bash
+#| eval: true
+#| echo: false
+#| output: false
+
+pip install ccrvam==0.9.6
+```
+
+In this chapter, we demonstrate the practical application of the Checkerboard Copula Regression-based Visualization and Association Measure (CCRVAM) techniques introduced in previous chapters. We will analyze a real-world dataset using the `ccrvam` package implementation described in @sec-software. This analysis will showcase how our methods can be used to explore associations between categorical predictors and an ordinal response variable, quantify the strength of these associations, and visualize prediction patterns.
+
+## Dataset Overview
+
+The dataset we analyze contains information from a clinical study on back pain treatments, originally presented by @anderson1984regression. This dataset is particularly suitable for our methodology as it includes an ordinal response variable (pain relief outcome) and multiple categorical predictor variables.
+
+The dataset consists of 4 categorical variables:
+
+| Variable | Description               | Categories                                                                                                                             |
+|-----------------|-----------------|--------------------------------------|
+| $X_1$    | Length of Previous Attack | 1=Short, 2=Long                                                                                                                        |
+| $X_2$    | Pain Change               | 1=Better, 2=Same, 3=Worse                                                                                                              |
+| $X_3$    | Lordosis                  | 1=Absent/Decreasing, 2=Present/Increasing                                                                                              |
+| $Pain$   | Back Pain Outcome         | 1=worse (W), 2=same (S), 3=slight improvement (SI), 4=moderate improvement (MODI), 5=marked improvement (MARI), 6=complete relief (CR) |
+
+This dataset represents a common scenario in medical and social science research, where the goal is to understand how multiple categorical factors influence an ordinal outcome. The pain outcome variable has a natural ordering (from worse to complete relief), making it an ideal candidate for our checkerboard copula approach.
+
+## Data Preparation and Loading
+
+The `ccrvam` package provides flexible data loading capabilities through `DataProcessor` class. As described in @sec-software, this class supports multiple data formats including case-form, frequency-form, and table-form data. Here, we demonstrate how to load the back pain dataset using each of these approaches.
+
+First, we need to import the necessary libraries and define our variable structure:
+
+```{python}
+#| label: data-setup
+#| echo: true
+#| eval: true
+#| output: false
+
+import numpy as np
+from ccrvam import GenericCCRVAM, DataProcessor
+
+# Define the ordered list of variable names
+var_list_4d = ["x1", "x2", "x3", "pain"]
+
+# Define the dimension tuple representing 
+# the number of categories for each variable
+data_dimension = (2, 3, 2, 6)
+
+# Create a category mapping for non-integer categories
+# (required for 'pain' variable)
+category_map_4d = {
+    "pain": {
+        "worse": 1,
+        "same": 2,
+        "slight.improvement": 3,
+        "moderate.improvement": 4,
+        "marked.improvement": 5,
+        "complete.relief": 6
+    },
+}
+```
+
+The `var_list_4d` defines the order of variables in our analysis. The `data_dimension` tuple specifies the number of categories for each variable in the same order. The `category_map_4d` provides a mapping from text labels to numeric indices for non-integer categories, which is necessary for the "pain" variable in this dataset.
+
+The CCRVAM package supports three different data loading formats, providing flexibility based on how your data is structured. We'll demonstrate each method:
+
+### Case Form Data Loading
+
+Case form represents individual observations, where each row contains the category values for all variables for a single observation:
+
+```{python}
+#| label: data-load-case-form
+#| echo: true
+#| eval: true
+#| output: false
+
+# Loading data from case form file
+contingency_table_4d = DataProcessor.load_data(
+    "./data/caseform.pain.txt",
+    data_form="case_form",
+    dimension=data_dimension,
+    var_list=var_list_4d,
+    category_map=category_map_4d,
+    named=True,
+    delimiter="\t"
+)
+
+# Initialize the GenericCCRVAM object
+rda_ccrvam = GenericCCRVAM.from_contingency_table(
+                contingency_table_4d
+             )
+```
+
+### Frequency Form Data Loading
+
+Frequency form data contains the category values for all variables along with a count of how many times that combination appears:
+
+```{python}
+#| label: data-load-freq-form
+#| echo: true
+#| eval: true
+#| output: false
+
+# Loading data from frequency form file
+contingency_table_4d_from_freq = DataProcessor.load_data(
+    "./data/freqform.pain.txt",
+    data_form="frequency_form",
+    dimension=data_dimension,
+    var_list=var_list_4d,
+    category_map=category_map_4d,
+    named=True,
+    delimiter="\t"
+)
+
+# Initialize the GenericCCRVAM object
+rda_ccrvam_from_freq = GenericCCRVAM.from_contingency_table(
+                          contingency_table_4d_from_freq
+                       )
+```
+
+### Contingency Table Form Data Loading
+
+Table form represents the data as a multidimensional contingency table with counts directly:
+
+```{python}
+#| label: data-load-table-form
+#| echo: true
+#| eval: true
+#| output: false
+
+# Define the 4D contingency table as a NumPy array
+rda_contingency_table = np.array([
+    # X1=1 (Short)
+    [
+        # X2=1 (Better)
+        [
+            # X3=1 (Absent)
+            [0, 1, 0, 0, 2, 4],  # Counts for each Pain outcome
+            # X3=2 (Present) 
+            [0, 0, 0, 1, 3, 0]
+        ],
+        # X2=2 (Same)
+        [
+            # X3=1 (Absent)
+            [0, 2, 3, 0, 6, 4],
+            # X3=2 (Present)
+            [0, 1, 0, 2, 0, 1]
+        ],
+        # X2=3 (Worse) 
+        [
+            # X3=1 (Absent)
+            [0, 0, 0, 0, 2, 2],
+            # X3=2 (Present)
+            [0, 0, 1, 1, 3, 0]
+        ]
+    ],
+    # X1=2 (Long)
+    [
+        # X2=1 (Better)
+        [
+            # X3=1 (Absent)
+            [0, 0, 3, 0, 1, 2],
+            # X3=2 (Present)
+            [0, 1, 0, 0, 3, 0]
+        ],
+        # X2=2 (Same)
+        [
+            # X3=1 (Absent)
+            [0, 3, 4, 5, 6, 2],
+            # X3=2 (Present)
+            [1, 4, 4, 3, 0, 1]
+        ],
+        # X2=3 (Worse)
+        [
+            # X3=1 (Absent)
+            [2, 2, 1, 5, 2, 0],
+            # X3=2 (Present)
+            [2, 0, 2, 3, 0, 0]
+        ]
+    ]
+])
+
+# Load data from the table
+contingency_table_4d_from_array = DataProcessor.load_data(
+    rda_contingency_table,
+    data_form="table_form",
+    dimension=data_dimension,
+    var_list=var_list_4d,
+    category_map=category_map_4d
+)
+
+# Initialize the GenericCCRVAM object
+rda_ccrvam_from_array = GenericCCRVAM.from_contingency_table(
+                          contingency_table_4d_from_array
+                        )
+```
+
+```{python}
+#| label: data-load-check
+#| echo: true
+#| eval: true
+#| output: true
+
+# Check if the Resulting Joint Probability Matrices are the same 
+# after loading data using various different methods mentioned above
+same_1_2 = np.array_equal(rda_ccrvam.P, rda_ccrvam_from_freq.P)
+same_2_3 = np.array_equal(rda_ccrvam_from_freq.P, rda_ccrvam_from_array.P)
+
+# Are P matrices are the same across methods?
+print(same_1_2 and same_2_3)
+```
+
+The output of each loading method is a 4-dimensional joint probability matrix with shape (2, 3, 2, 6) corresponding to the number of categories for each variable. This matrix contains the estimated joint probability distribution for all possible combinations of the categorical variables.
+
+The values in the matrix represent the probability of observing each specific combination of categories. For example, the value at position \[0, 0, 0, 1\] = 0.00990099 represents the probability of observing: $X_1=1$ (Short previous attack), $X_2=1$ (Better pain change), $X_3=1$ (Absent/Decreasing Lordosis), and $Pain=2$ (Same pain outcome).
+
+Note that all three loading methods should produce the same joint probability matrix if the data sources are consistent, which we can observe from the identical outputs in the example.
+
+::: callout-note
+### Note:
+
+In the interest of brevity, for further real data analysis covered in this chapter, we will not be walking through each code-chunk. If you are interested, please feel free to checkout the code for the real data analysis in the Jupyter notebooks at <https://github.com/DhyeyMavani2003/ccrvam/tree/main/examples/jupyter>.
+:::
+
+## Exploratory Data Analysis
+
+Before applying our advanced statistical methods, we first examine the basic probability distributions in the data. These distributions provide insights into the prevalence of each category in our dataset. We observe the following marginal probability density functions (pdfs):
+
+-   **Length of Previous Attack (**$X_1$): 38.61% of patients had short previous attacks, while 61.39% had long previous attacks.
+-   **Pain Change (**$X_2$): 20.79% of patients experienced better pain change, 51.49% had the same level of pain, and 27.72% experienced worse pain change.
+-   **Lordosis (**$X_3$): 63.37% of patients had absent or decreasing lordosis, while 36.63% had present or increasing lordosis.
+-   **Back Pain Outcome (**$Pain$): The distribution shows that 4.95% of patients experienced worse pain after treatment (W), 13.86% reported no change (S), 17.82% experienced slight improvement (SI), 19.80% had moderate improvement (MODI), 27.72% reported marked improvement (MARI), and 15.84% experienced complete relief (CR).
+
+These findings provide valuable context for interpreting our subsequent analyses. For the back pain outcome specifically, we observe that treatments were generally effective, with more than 60% of patients experiencing at least moderate improvement (combining the moderate improvement, marked improvement, and complete relief categories).
+
+## Calculating Checkerboard Copula Scores (CCS)
+
+Following the methodology described in @sec-ccrvam, we calculate the checkerboard copula scores (CCS) for each variable in our dataset. We compute the CCS for all variables and determine their respective variances:
+
+- **Length of Previous Attack ($X_1$):** Two distinct scores (0.193, 0.693) with a variance of 0.059.
+- **Pain Change ($X_2$):** Three distinct scores (0.104, 0.465, 0.861) with a variance of 0.069.
+- **Lordosis ($X_3$):** Two distinct scores (0.317, 0.817) with a variance of 0.058.
+- **Back Pain Outcome ($Pain$):** Six distinct scores ranging from 0.025 to 0.921, with a variance of 0.080.
+
+The results show distinct patterns of scores across the variables, with Back Pain Outcome demonstrating the most granular distribution with six distinct scores ranging from approximately 0.025 to 0.921. The variance calculations reveal that the Back Pain Outcome variable has the highest variance at approximately 0.080, while Lordosis ($X_3$) has the lowest at 0.058. These variance values are critical inputs for our subsequent analysis of scaled association measures, as they provide normalization factors that allow for meaningful comparisons across different variable relationships.
+
+## Checkerboard Copula Regression (CCR) Analysis
+
+Next, we apply the Checkerboard Copula Regression (CCR) to predict the back pain outcome categories based on the predictor variables: Length of Previous Attack ($X_1$), Pain Change ($X_2$), and Lordosis ($X_3$).
+
+Our analysis generates predictions for each possible combination of predictor variables. The predictions show the expected pain outcome category for each combination of predictor variables. For example, patients with a short previous attack ($X_1=1$), better pain change ($X_2=1$), and absent lordosis ($X_3=1$) are predicted to have marked improvement (category 5) in pain outcomes. The results reveal several important patterns:
+
+1. Patients with a short previous attack ($X_1=1$) generally have better outcomes (categories 4-5) than those with long previous attacks ($X_1=2$)
+
+2. Within the short previous attack group, those with better or worse pain change ($X_2=1$ or $X_2=3$) tend to have marked improvement (category 5)
+
+3. For patients with long previous attacks ($X_1=2$), those with worse pain change ($X_2=3$) generally have the poorest outcomes (category 3: slight improvement)
+
+4. Under the assumption of joint independence between $Pain$ and the predictor variables $(X_1, X_2, X_3)$, the predicted pain outcome category is 4 (moderate improvement), which serves as a reference point for our analysis.
+
+These findings highlight the complex interrelationships between previous attack duration, pain change, and lordosis in predicting back pain treatment outcomes. The visualizations generated by `ccrvam` in @fig-ccr-viz further enhance our understanding of these relationships and provide valuable clinical insights.
+
+```{python}
+#| label: fig-ccr-viz
+#| fig-cap: "This visualization illustrates the predicted back pain outcomes based on combinations of prior attack length, pain change, and lordosis severity using the ccrvam framework. Each tuple on the x-axis represents a unique combination of predictor categories, with the predicted back pain category indicated by the position of the black dot. This plot reveals nuanced interdependencies among clinical factors and emphasizes the role of multivariate interactions in shaping patient outcomes."
+#| echo: false
+#| eval: true
+#| output: true
+# Plotting with custom naming scheme inputted by user, but without legend (tuple labels instead on x-axis)
+var_names={1:"Length", 2:"Pain Change", 3:"Lordosis", 4:"Back Pain"}
+rda_ccrvam.plot_ccr_predictions(predictors=[1,2,3], response=4, legend_style="xaxis", variable_names=var_names)
+```
+
+## Quantifying Association with (S)CCRAM
+
+We now quantify the strength of the association between our predictors (Length of Previous Attack, Pain Change, and Lordosis) and the back pain outcome using CCRAM and SCCRAM.
+The CCRAM (Checkerboard Copula Regression Association Measure) value of 0.2576 indicates that approximately 25.76% of the variation in back pain outcomes can be explained by the three predictor variables. This provides a meaningful measurement of how well our predictor variables collectively explain the pain outcomes observed in patients.
+
+For a more standardized interpretation, we calculate the SCCRAM (Scaled Checkerboard Copula Regression Association Measure), which yields a value of 0.2687. This scaled measure accounts for the theoretical maximum association possible in this dataset structure, making it easier to interpret and compare across different studies with varying data characteristics.
+These association measures provide important quantitative validation of the relationships we observed in our earlier analyses and help establish the overall predictive power of our model.
+
+## Uncertainity Quantification Using Bootstrap
+
+To assess the uncertainty in our CCRAM and SCCRAM estimates, we utilize nonparametric bootstrap methods with 9,999 resamples. This approach allows us to estimate confidence intervals and standard errors without making distributional assumptions about our data.
+
+For the CCRAM measure quantifying the association between our predictors (Length of Previous Attack, Pain Change, and Lordosis) and Back Pain outcomes, the bootstrap analysis yields an observed CCRAM value of 0.2576 with a 95% BCa confidence interval of (0.1849, 0.4762) and a standard error of 0.0748. For the scaled measure (SCCRAM), which normalizes the association for better interpretability, we observe a value of 0.2687 with a 95% BCa confidence interval of (0.0691, 0.3509) and a standard error of 0.0775.
+
+These results reveal important insights about our analysis. The confidence intervals indicate that while there is uncertainty in the exact value of association, we can be reasonably confident that the true association is substantial. The positive bias in the bootstrap estimates (0.0666 for CCRAM and 0.0718 for SCCRAM) suggests that our observed values may be conservative estimates of the true association. The relatively high bias-to-standard-error ratios (0.8904 for CCRAM and 0.9267 for SCCRAM) indicate some potential complexity in the underlying distribution, which further justifies our use of robust bootstrap methods for uncertainty quantification.
+
+The visualizations generated by `ccrvam` in @fig-ccram-viz and @fig-sccram-viz further enhance our understanding of the uncertanity in (S)CCRAM by providing an intuitive representation. 
+
+```{python}
+#| label: fig-ccram-viz
+#| fig-cap: "Bootstrap distribution of CCRAM $(X_1, X_2, X_3 \\rightarrow X_4)$. The red dashed line marks the observed CCRAM value of 0.2576. This plot visualizes variability and supports estimation of confidence intervals and bias for the measure of association."
+#| echo: false
+#| eval: true
+#| output: true
+from ccrvam import bootstrap_ccram
+rda_ccram_result = bootstrap_ccram(
+    rda_contingency_table,
+    predictors=[1, 2, 3],
+    response=4,
+    confidence_level=0.95,
+    scaled=False,
+    method="BCa",
+    n_resamples=9999
+)
+```
+
+```{python}
+#| label: fig-sccram-viz
+#| fig-cap: "Bootstrap distribution of SCCRAM $(X_1, X_2, X_3 \\rightarrow X_4)$. The red dashed line marks the observed SCCRAM value of 0.2687. This normalized version of CCRAM accounts for maximum possible association and highlights uncertainty in scaled estimates."
+#| echo: false
+#| eval: true
+#| output: true
+rda_sccram_result = bootstrap_ccram(
+    rda_contingency_table,
+    predictors=[1, 2, 3],
+    response=4,
+    confidence_level=0.95,
+    scaled=True,
+    method="BCa",
+    n_resamples=9999
+)
+```
+
+## Statistical Significant Testing Using Permutation Tests
+
+To assess whether the observed associations could have occurred by chance, we conduct permutation tests with 9,999 resamples. This approach allows us to construct empirical null distributions for both CCRAM and SCCRAM metrics under the hypothesis of no association between predictors and the pain outcome.
+
+For the CCRAM measure, we observe a value of 0.2576 with a p-value of 0.0016. The permutation distribution exhibits a median of 0.0998, with the 99th percentile at 0.2214. Our observed CCRAM value exceeds even the 99th percentile of the null distribution, providing strong evidence against the null hypothesis of no association. Similarly, for the SCCRAM measure, we observe a value of 0.2687 with an even smaller p-value of 0.0011. The permutation distribution for SCCRAM shows a median of 0.1046 with the 99th percentile at 0.2255. Again, our observed value exceeds the 99th percentile of values that would be expected by chance.
+
+These permutation test results provide strong statistical evidence that the observed associations between our predictor variables (Length of Previous Attack, Pain Change, and Lordosis) and Back Pain outcomes are not due to random variation. The extremely small p-values confirm that these relationships are statistically significant, further validating the clinical relevance of our findings. 
+
+The visualizations generated by `ccrvam` in @fig-perm-viz and @fig-perm-s-viz further enhance our understanding of the relative association strength in (S)CCRAM by providing an intuitive representation.
+
+```{python}
+#| label: fig-perm-viz
+#| fig-cap: "Permutation distribution of CCRAM $(X_1, X_2, X_3 \\rightarrow X_4)$. The red dashed line marks the observed CCRAM value of 0.2576. The empirical null distribution illustrates that such a value is highly unlikely under the assumption of no association (p = 0.0016)."
+#| echo: false
+#| eval: true
+#| output: true
+from ccrvam import permutation_test_ccram
+rda_perm_result = permutation_test_ccram(
+    rda_contingency_table,
+    predictors=[1, 2, 3],
+    response=4,
+    scaled=False,
+    alternative='greater',
+    n_resamples=9999
+)
+```
+
+```{python}
+#| label: fig-perm-s-viz
+#| fig-cap: "Permutation distribution of SCCRAM $(X_1, X_2, X_3 \\rightarrow X_4)$. The red dashed line marks the observed SCCRAM value of 0.2687. The observed value lies well beyond the 99th percentile of the null distribution, providing strong evidence of statistically significant association (p = 0.0011)."
+#| echo: false
+#| eval: true
+#| output: true
+rda_scaled_perm_result = permutation_test_ccram(
+    rda_contingency_table,
+    predictors=[1, 2, 3],
+    response=4,
+    scaled=True,
+    alternative='greater',
+    n_resamples=9999
+)
+```
+
+## Bootstrap Analysis for CCR Predictions
+
+We can also use bootstrap methods to assess the uncertainty in our category predictions. By generating 9,999 bootstrap samples, we obtain a prediction matrix that shows the percentage of bootstrap samples predicting each pain category for each combination of predictor values.
+
+This approach provides a measure of confidence in our predictions. For example, for patients with short previous attack, better pain change, and absent lordosis ($X_1=1, X_2=1, X_3=1$), the prediction of category 5 (marked improvement) occurs in approximately 70.90% of bootstrap samples, indicating high confidence in this prediction. Similarly, for patients with short previous attack, better pain change, and present lordosis ($X_1=1, X_2=1, X_3=2$), the prediction of category 5 is even more consistent, occurring in 87.17% of bootstrap samples.
+
+The bootstrap analysis also reveals cases where predictions are less certain. For instance, patients with long previous attack, same pain change, and present lordosis ($X_1=2, X_2=2, X_3=2$) show 76.92% of bootstrap samples predicting category 3 (slight improvement), while patients with long previous attack, better pain change, and present lordosis ($X_1=2, X_2=1, X_3=2$) have more uncertainty with 52.06% of samples predicting category 5 and 36.29% predicting category 4.
+
+The visualization of this bootstrap prediction matrix through a heatmap produced by `ccrvam` in @fig-ccr-boot further enhances our understanding of prediction confidence across different combinations of predictor variables. The dotted line in the heatmap indicates the predicted category under joint independence (category 4), providing a reference point against which to compare our model predictions.
+
+```{python}
+#| label: fig-ccr-boot
+#| fig-cap: "Bootstrap-based heatmap of predicted pain categories given $(X_1, X_2, X_3)$. Each cell shows the percentage of bootstrap samples predicting a given pain level for a specific combination of predictor values. White dots mark the most frequently predicted category, and the red dotted line indicates the expected response under joint independence."
+#| echo: false
+#| eval: true
+#| output: true
+from ccrvam import bootstrap_predict_ccr_summary
+rda_prediction_matrix = bootstrap_predict_ccr_summary(
+    rda_contingency_table,
+    predictors=[1, 2, 3],
+    predictors_names=["X1", "X2", "X3"],
+    response=4,
+    response_name="Pain",
+    n_resamples=9999
+)
+rda_prediction_matrix.plot_prediction_heatmap()
+```
+
+## Discussion and Clinical Interpretation
+
+Our analysis of the back pain treatment dataset using the Checkerboard Copula Regression-based Visualization and Association Measure (CCRVAM) methodology reveals several clinically meaningful patterns that merit discussion. The CCRAM value of 0.2576 indicates that approximately 25.76% of the variation in back pain outcomes can be explained by the three predictor variables (Length of Previous Attack, Pain Change, and Lordosis). Similarly, the SCCRAM value of 0.2687 provides a standardized measure that accounts for the theoretical maximum association possible in this dataset structure. These values demonstrate a moderate but meaningful association between our predictors and pain outcomes, consistent with the multifactorial nature of back pain treatment response.
+
+Patients with short previous attacks ($X_1=1$) generally experienced better outcomes (categories 4-5: moderate to marked improvement) compared to those with long previous attacks ($X_1=2$). This finding suggests that the chronicity of pain prior to treatment may be an important prognostic factor, with early intervention potentially yielding better results. The influence of pain change ($X_2$) appears to interact with the length of previous attack. For patients with short previous attacks, both better ($X_2=1$) and worse ($X_2=3$) pain change categories often led to marked improvement (category 5), while for patients with long previous attacks, worse pain change ($X_2=3$) generally predicted poorer outcomes (category 3: slight improvement). This interaction effect highlights the complex nature of pain response trajectories. The presence or absence of lordosis ($X_3$) appears to have a more subtle influence on outcomes compared to the other predictors, often modifying the effects of the primary predictors rather than driving outcomes independently.
+
+The permutation test results provide strong statistical evidence that the observed associations are not due to random variation. With p-values of 0.0016 for CCRAM and 0.0011 for SCCRAM, we can confidently reject the null hypothesis of no association between our predictor variables and back pain outcomes. The observed values exceed the 99th percentile of their respective null distributions, further strengthening the significance of our findings.
+
+The bootstrap analysis of our predictions reveals varying levels of confidence across different predictor combinations. For instance, for patients with short previous attack, better pain change, and absent lordosis ($X_1=1, X_2=1, X_3=1$), the prediction of marked improvement (category 5) occurs in 70.90% of bootstrap samples. For patients with short previous attack, better pain change, and present lordosis ($X_1=1, X_2=1, X_3=2$), this prediction is even more consistent, occurring in 87.17% of bootstrap samples. In contrast, patients with long previous attack, better pain change, and present lordosis ($X_1=2, X_2=1, X_3=2$) show more uncertainty with 52.06% of samples predicting category 5 and 36.29% predicting category 4. These confidence metrics provide valuable context for clinical decision-making, indicating where predictions are most reliable and where greater caution may be warranted.
+
+These findings have several implications for clinical practice. Clinicians may use these results to provide more informed prognostic guidance to patients based on their specific combination of risk factors. The identification of patients with long previous attacks and worsening pain as having poorer outcomes may suggest the need for more aggressive or multimodal intervention approaches for this subgroup. The generally better outcomes observed in patients with shorter previous attacks reinforce the importance of early treatment initiation for back pain. Additionally, the bootstrap prediction matrices can help calibrate expectations for both clinicians and patients, providing nuanced probability estimates rather than deterministic predictions.
+
+This analysis demonstrates several key advantages of the CCRVAM methodology for analyzing categorical and ordinal data in clinical research. The approach respects the ordinal nature of both predictors and outcomes without imposing arbitrary numerical scoring. CCRVAM naturally captures complex interactions among predictors without requiring explicit interaction terms. The visualization tools provided by the `ccrvam` package facilitate intuitive interpretation of multidimensional patterns. The integration of bootstrap and permutation methods provides comprehensive uncertainty assessment without parametric assumptions.
+
+Despite these strengths, several limitations should be acknowledged. The dataset includes 101 observations distributed across 72 possible combinations of predictor and outcome categories, resulting in sparse data for some combinations. As with any observational study, unmeasured confounders may influence the observed associations. The cross-sectional nature of the data limits our ability to assess temporal relationships and treatment dynamics.
+
+The application of CCRVAM methodology to this back pain treatment dataset using our `ccrvam` package has yielded clinically meaningful insights while demonstrating the utility of this approach for analyzing complex categorical data in medical research. The findings suggest that patient characteristics, particularly the length of previous pain episodes and early treatment response, significantly influence treatment outcomes. These results may inform more personalized approaches to back pain management and highlight the value of sophisticated methodological tools for extracting meaningful patterns from categorical clinical data.

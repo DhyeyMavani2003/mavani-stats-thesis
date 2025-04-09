@@ -3,8 +3,8 @@ project:
   
 book:
   # Update info below with your info and the date
-  output-file: "dhyey-mavani_thesis_2025-02-22" 
-  title: "CCRVAM: A Model-Free Framework for Exploratory Analysis of Multi-Dimensional Discrete Data with Ordinal Response Variable"
+  output-file: "dhyey-mavani_thesis_2025-04-01" 
+  title: "CCRVAM : a Python Package for Model-Free Exploratory Analysis of Multivariate Discrete Data with Ordinal Response Variable"
   author: "Dhyey Mavani"
   # `today` date option will automatically print the date of rendering
   date: today
@@ -14,18 +14,17 @@ book:
       file: index.qmd 
     # Add/remove and edit file names and order as you go
     - 01-ch1-intro.qmd
-    - 02-ch2-motivation-and-eda.qmd
-    - 03-ch3-exposition.qmd
-    - 04-ch4-ccrvam.qmd
-    - 05-ch5-software-impl.qmd
-    - 06-ch6-rda.qmd
-    - 07-ch7-conclusion.qmd
+    - 02-ch2-exposition.qmd
+    - 03-ch3-ccrvam.qmd
+    - 04-ch4-software-impl.qmd
+    - 05-ch5-rda.qmd
+    - 06-ch6-conclusion.qmd
     # References must be the last file before the appendices
-    - 08-references.qmd
+    - 07-references.qmd
   appendices:
-    - 09-app1-code.qmd # Must include
+    - 08-app1-code.qmd # Must include
     # Must include if corrections are made after initial submission
-    - 10-app2-corrections.qmd
+    - 09-app2-corrections.qmd
 
 # Replace this file with your .bib file
 bibliography: references.bib 
@@ -33,7 +32,7 @@ bibliography: references.bib
 csl: includes/american-statistical-association.csl 
 # Update department, advisors, and submission year with your information
 department: "Mathematics and Statistics"
-advisors: "Professor Shu-Min Liao (Amherst College), Professor Daeyoung Kim (University of Massachusetts Amherst)"
+advisors: "Professor Shu-Min Liao"
 submitted: 2025
 
 format:

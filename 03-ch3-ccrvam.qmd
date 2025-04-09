@@ -1,0 +1,505 @@
+# Checkerboard Copula Regression, its Visualization and Association measure for Model-Free Regression Dependence Analysis of Multivariate Discrete Data {#sec-ccrvam}
+
+```{r}
+#| label: setup
+#| include: false
+
+# Load knitr package
+library(knitr)
+
+# Load packages
+library(tidyverse)
+library(gt)
+
+# Set default ggplot theme for document
+theme_set(theme_classic())
+# If using kableExtra tables, print blank cells instead of `NA`
+options(knitr.kable.NA = "")
+```
+
+In this chapter, we will review and combine concepts from @weikim and @Liao2024 in order to ultimately define regression based on checkerboard copula along with some visualization and association measures for model-free regression dependence analysis of multivariate discrete data.
+
+## Data 
+
+Before we dive into details of the method and some pre-requisites, let's understand what is the type of data of interest. The methods described in this chapter are applicable on multivariate categorical data in the form of multi-dimensional contingency table with an ordinal response variable and a set of categorical (nominal/ordinal) predictors.
+
+::: {.example}
+### 2-D Example  
+[Adapted from @weikim]  
+Consider a dataset that contains two ordinal variables: the dose of a treatment drug for acute migraine ($X_1$) with $I_1 = 5$ categories ($(x_1^1, x_2^1, x_3^1, x_4^1, x_5^1)=(\text{very low, low, medium, high, very high})$), and the severity of migraine pain recorded after treatment ($X_2$) with $I_2 = 3$ categories ($(x_1^2, x_2^2, x_3^2) = (\text{mild, moderate, severe})$).
+
+\begin{table}[H]
+\centering
+\caption{Joint p.m.f of $X_1$ and $X_2$, $P = \{p_{i_1 i_2}\}$.}
+\begin{tabular}{c|ccc}
+\toprule
+$X_1 \backslash X_2$ & $x_1^2$ & $x_2^2$ & $x_3^2$ \\
+\midrule
+$x_1^1$ & 0     & 0     & 2/8 \\
+$x_2^1$ & 0     & 1/8   & 0   \\
+$x_3^1$ & 2/8   & 0     & 0   \\
+$x_4^1$ & 0     & 1/8   & 0   \\
+$x_5^1$ & 0     & 0     & 2/8 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+This example has been carefully constructed so that $X_2$ has a quadratic relationship with $X_1$ (as level of $X_2$ decreases, the level of $X_1$ increases). We can also observe that $X_2$ is a function of $X_1$ with probability 1, but not the other way around (for a given category of $X_1$, there is one and only one category of $X_2$ whose corresponding joint probability is non-zero).
+:::
+
+## Checkerboard Copula and its Density 
+
+Recall that checkerboard copula and the corresponding copula density is defined in Chapter @sec-exposition's @def-checkerboard-copula. In order to understand it better, let's continue building upon the example data above by defining the copula and its corresponding density.
+
+```{python}
+#| label: copula-density
+#| echo: false
+#| output: false
+
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.colors as colors
+
+def create_copula_density_plot():
+    # Create figure
+    fig, ax = plt.subplots(figsize=(3, 3))
+    
+    # Define grid divisions
+    u1_divisions = np.array([0, 2/8, 3/8, 5/8, 6/8, 1])
+    u2_divisions = np.array([0, 2/8, 4/8, 1])
+    
+    # Determine the number of blocks
+    n_rows = len(u1_divisions) - 1
+    n_cols = len(u2_divisions) - 1
+    
+    # Create meshgrid for the full plot
+    du1 = np.diff(u1_divisions)
+    du2 = np.diff(u2_divisions)
+    
+    # Define the density values in each block
+    # 0: light blue, 2: purple, 4: magenta
+    # Reshaping the density values to match the grid structure
+    density_values = np.array([
+        [0, 0, 2],  # Bottom row (U1 from 0 to 2/8)
+        [0, 4, 0],  # Second row (U1 from 2/8 to 3/8)
+        [4, 0, 0],  # Third row (U1 from 3/8 to 5/8)
+        [0, 4, 0],  # Fourth row (U1 from 5/8 to 6/8)
+        [0, 0, 2],  # Top row (U1 from 6/8 to 1)
+    ])
+    
+    # Create colormap for the specific values (0, 2, 4)
+    cmap = colors.ListedColormap(['lightblue', 'violet', 'magenta'])
+    bounds = [-0.5, 0.5, 2.5, 4.5]
+    norm = colors.BoundaryNorm(bounds, cmap.N)
+    
+    # Plot the piecewise constant density
+    for i in range(n_rows):
+        for j in range(n_cols):
+            value = density_values[i, j]
+            rect = plt.Rectangle(
+                (u2_divisions[j], u1_divisions[i]), 
+                du2[j], du1[i], 
+                facecolor=cmap(norm(value)),
+                alpha=1.0,
+                edgecolor='black',
+                linewidth=0.5
+            )
+            ax.add_patch(rect)
+            
+            # Add text with density value
+            ax.text(
+                u2_divisions[j] + du2[j]/2,
+                u1_divisions[i] + du1[i]/2,
+                str(int(value)),
+                horizontalalignment='center',
+                verticalalignment='center',
+                fontsize=16,
+                color='black'
+            )
+    
+    # Set axis labels and limits
+    ax.set_xlabel('$U_2$', fontsize=14)
+    ax.set_ylabel('$U_1$', fontsize=14)
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    
+    # Add grid lines at each division
+    for u in u1_divisions:
+        ax.axhline(y=u, color='black', linestyle=':', linewidth=1)
+    for u in u2_divisions:
+        ax.axvline(x=u, color='black', linestyle=':', linewidth=1)
+    
+    # Add colorbar
+    sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+    sm.set_array([])
+    cbar = plt.colorbar(sm, ax=ax, ticks=[0, 2, 4])
+    cbar.set_label('')
+    
+    # Add title
+    fig.text(0.5, 0.05, "Copula density $c^+(u_1, u_2)$", ha='center', fontsize=14)
+    
+    # Adjust layout
+    plt.tight_layout(rect=[0, 0.07, 1, 1])
+    
+    return fig
+
+# Generate the plot
+fig = create_copula_density_plot()
+
+# For .qmd file, you would save the figure
+plt.savefig('fig/copula_density_plot.png', dpi=300, bbox_inches='tight')
+plt.close(fig)
+```
+
+::: {.example}
+### 2-D Example (continued...)
+[Adapted from @weikim]  
+Upon application of @def-marginal-pmf-d-way-contable, we can see that the marginal p.m.f.s of $X_1$ and $X_2$ are $p_{i_1+} \in \{2/8,1/8,2/8,1/8,2/8\}$ and $p_{+i_2} \in \{2/8,2/8,4/8\}$, respectively. Furthermore, we can see that the ranges of the marginal c.d.f.s of $X_1$ and $X_2$ are $D_1 = \{u_0^1, u_1^1, u_2^1, u_3^1, u_4^1, u_5^1\} = \{0, 2/8, 3/8, 5/8, 6/8, 1\}$ and $D_2 = \{u_0^2, u_1^2, u_2^2, u_3^2\} = \{0, 2/8, 4/8, 1\}$, respectively. As per @def-checkerboard-copula, we can visualize checkerboard copula density of $X_1$ and $X_2$ in @fig-copula-density.
+
+```{r}
+#| label: fig-copula-density
+#| fig-cap: "Checkerboard Copula Density Visualization for 2-D Example (This figure's styling is designed to reproduce the work presented by Wei and Kim, 2021 in supplementary materials)"
+knitr::include_graphics("fig/copula_density_plot.png")
+```
+
+:::
+
+## Checkerboard Copula Score
+
+Ordinal variables contain categories with natural ordering but unknown distances between them. When analyzing associations in ordinal contingency tables, we can leverage this inherent ordering information. To achieve this, @weikim introduce checkerboard copula scores derived from the checkerboard copula.
+
+As established in @def-checkerboard-copula, the checkerboard copula represents a smoothed version of the subcopula associated with ordinal random vector X. It distributed probability mass uniformly across d-dimensional hyperrectangles in $[0,1]^d$, specifically within intervals $[u_{i_{j-1}}^j, u_{i_j}^j]$, where $u_{i_j}^j$ is defined by the marginal cumulative distribution functions. Furthermore, we can define a transformation of $X_j$ via $U_j$ as $S_j = \mathbb{E}[U_j|X_j]$, where $j \in \{1 \dots d\}$. Note that here, $S_j$ is an ordinal random variable with numerical support values $\{s_1^j, \dots, s_{i_j}^j, \dots, s_{I_j}^j\}$, where $s_{i_j}^j = (u_{i_{j-1}}^j + u_{i_j}^j)/2$.
+
+::: {#def-ccs}
+### Checkerboard Copula Scores (CCS)
+[@weikim]
+The **checkerboard copula scores (CCS)** of ordinal variable $X_j$ are $\{s_1^j, \dots, s_{i_j}^j, \dots, s_{I_j}^j\}$, where $s_{i_j}^j = (u_{i_{j-1}}^j + u_{i_j}^j)/2$ for $i_j \in \{1, \dots, I_j\}$ and $u_{i_j}^j$ as defined in @sec-checkerboard-copula. In other words, CCS is a set of the average of the marginal distributions evaluated at every two consecutive categories of $X_j$.
+:::
+
+There are several interesting properties of these scores as proven by @weikim. One that is of our interest is the formula for mean and variance of the support vector $S_j$.
+
+::: {#lem-mean-var-S}
+### Mean and Variance of Support Vector ($S_j$)
+[@weikim]
+The probability-weighted mean (or expected value) of $S_j$ is $\mu_{S_j} = 0.5$. The variance of $S_j$ is $\sigma_{S_j}^2 = \frac{1}{4}\sum_{i_j = 1}^{I_j} u_{i_j -1}^j u_{i_j}^j p_{+i_j+}$.
+:::
+
+::: {.example}
+### 2-D Example (continued...)
+[Adapted from @weikim]  
+Upon application of @def-ccs, we obtain the checkerboard copula scores of $X_1$ and $X_2$ as $(2/16, 5/16, 8/16, 11/16, 14/16)$ and $(2/16, 6/16, 12/16)$ respectively. Furthermore, by @lem-mean-var-S, we can say that the $(\mu_{S_j}, \sigma_{S_j}^2)$ of $S_1$ and $S_2$ are $(0.5, 81/1024)$ and $(0.5, 9/128)$ respectively.
+:::
+
+### Empirical Estimation of CCS {#sec-empirical-ccs}
+
+Since we are dealing with discrete count data, at times, we generally do not have access to the joint probability matrix, instead we have to base our analysis on the counts of observations with various categorical combinations of variables of interest. Thus, below, we establish the missing link between count data and pre-defined distributions as introduced by @weikim.
+
+Let $\{n_{i_1, \dots, i_d}\}, i_j \in \{1, \dots, I_j\}, j \in \{1, \dots, d\}$, denote counts in a $d$-way contingency table obtained by classifying $n = \sum_{i_1=1}^{I_1} \dots \sum_{i_d=1}^{I_d} n_{i_1, \dots, i_d}$ observations (or **cases**) into categories of $d$ variables, $X_1, \dots, X_d$. 
+
+Let's define marginal sums of $i_j$-th category in $X_j$ as $n_{+i_j+}=\sum_{i_1=1}^{I_1} \dots \sum_{i_{j-1}=1}^{I_{j-1}} \sum_{i_{j+1}=1}^{I_{j+1}} \dots \sum_{i_d=1}^{I_d} n_{i_1, \dots, i_d}$, and $(d-1)$-variate marginal frequencies of $\mathbf{X}_{-j}$ as $n_{i_1, \dots, +_j, \dots, i_d} = \sum_{i_j=1}^{I_j} n_{i_1, \dots, i_d}$. 
+
+In terms of these, we can define estimators for the probabilities as follows:
+
+$$
+\hat{p}_{i_1,...,i_d} = \frac{n_{i_1,...,i_d}}{n}, \hat{p}_{+i_j+} = \frac{n_{+i_j+}}{n}, \hat{p}_{i_1,...,+_j,...,i_d} = \frac{n_{i_1,...,+_j,...,i_d}}{n}, \hat{p}_{i_j|\mathbf{i}_{-j}} = \frac{\hat{p}_{i_1,...,i_d}}{\hat{p}_{i_1,...,+_j,...,i_d}}
+$$
+
+Moreover, the range of marginal c.d.f. of $X_j$ is estimated by $[\hat{u}_0^j,...,\hat{u}_{i_j}^j,...,\hat{u}_{I_j}^{j}]$ with $\hat{u}_0^j = 0$ and $u_{i_j}^j = \sum_{k_j=1}^{i_j} \hat{p}_{+k_j+}$.
+
+Using above-established pre-requisites, @def-ccs, and @lem-mean-var-S we can estimate the checkerboard copula scores ${\hat{s}_1^j, \dots, \hat{s}_{I_j}^j}$ with $\hat{s}_{i_j}^j = (\hat{u}_{i_j-1}^j + \hat{u}_{i_j}^j)/2$ and $\hat{\sigma}_{\hat{S}_j}^2 = \sum_{i_j=1}^{I_j} \hat{u}_{i_j-1}^j \hat{u_{i_j}^j} \hat{p}_{+i_j+} / 4$.
+
+## Checkerboard Copula Regression, Prediction and Visualization 
+
+Let $\mathbf{U}$ be a uniform random vector on $[0,1]^d$ associated with the checkerboard copula $C^+$ for a $d$-way ordinal contingency table.
+
+::: {#def-marginal-copula-density}
+### $(d-1)$-Marginal Density
+[@weikim]
+The **$(d-1)$-marginal density** for $\mathbf{U}_{-j} = (U_1, \dots, U_{j-1}, U_{j+1}, \dots, U_d)^T$ is defined as 
+$$
+c^+(\mathbf{u}_{-j}) = \frac{p_{i_1, \dots, +_j, \dots, i_d}}{\prod_{k=1, k\neq j}^d p_{+i_k+}}
+$$
+where $\mathbf{u}_{-j} = (u_1, \dots, u_{j-1}, u_{j+1}, \dots, u_d)^T$ in $[0,1]^{d-1}$ and $u_{i_k-1}^k < u_k < u_{i_k}^k$. Here, $k \in \{1, \dots, j-1, j+1, \dots, d\}, j \in \{1, \dots, d\}$, $p_{i_1, \dots, +_j, \dots, i_d}$, and $p_{+i_k+}$ as in @def-marginal-pmf-d-way-contable. 
+:::
+
+::: {#def-conditional-copula-density}
+### Conditional Density of $U_j$ given $\mathbf{U}_{-j}$
+[@weikim]
+The **conditional density of $U_j$ given $\mathbf{U}_{-j}$**, where $\mathbf{U}_{-j} = (U_1, \dots, U_{j-1}, U_{j+1}, \dots, U_d)^T$ is defined as
+$$
+c^+(u_j|\mathbf{u}_{-j}) = \frac{c^+(\mathbf{u})}{c^+(\mathbf{u}_{-j})} = \frac{p_{i_j|\mathbf{i}_{-j}}}{p_{+i_j+}}
+$$
+where $\mathbf{u}_{-j} = (u_1, \dots, u_{j-1}, u_{j+1}, \dots, u_d)^T$ in $[0,1]^{d-1}$ and $u_{i_k-1}^k < u_k < u_{i_k}^k$. Here, $j \in \{1, \dots, d\}$, $p_{i_j|\mathbf{i}_{-j}}$, and $p_{+i_j+}$ as in @def-conditional-pmf-d-way-contable and @def-marginal-pmf-d-way-contable, respectively.
+:::
+
+Now, as mentioned in @weikim, we can define checkerboard copula regression function as follows
+
+::: {#def-checkerboard-copula-regression}
+### Checkerboard Copula Regression (CCR)
+[@weikim]
+The **checkerboard copula regression function** of $U_j$ on $\mathbf{U}_{-j}$ is defined as 
+$$
+r_{U_j|\mathbf{U}_{-j}}(\mathbf{u}_{-j}) \equiv E_{c^+}(U_j|\mathbf{U}_{-j}=\mathbf{u}_{-j}) = \int_0^1 u_j c^+(u_j|\mathbf{u}_{-j}) du_j = \sum_{i_j=1}^{I_j} p_{i_j|\mathbf{i}_{-j}} s_{i_j}^j
+$$
+In other words, CCR function is the mean checkerboard score of $X_j$ with respect to the conditional distribution at the category $\mathbf{i}_{-j}$ of $(d-1)$ explanatory variables $\mathbf{X}_{-j}$.
+:::
+
+::: {.example}
+### 2-D Example (continued...)
+[Adapted from @weikim]  
+Upon application of the above definitions, we obtain the following tabular representations of conditional p.m.f.s and checkerboard copula regressions.
+
+\begin{table}[H]
+\centering
+\caption{Conditional p.m.f of $X_2$ given $X_1$}
+\begin{tabular}{c|ccc}
+\toprule
+$X_1 \backslash X_2$ & $x_1^2$ & $x_2^2$ & $x_3^2$ \\
+\midrule
+$x_1^1$ & 0     & 0     & 1   \\
+$x_2^1$ & 0     & 1     & 0   \\
+$x_3^1$ & 1     & 0     & 0   \\
+$x_4^1$ & 0     & 1     & 0   \\
+$x_5^1$ & 0     & 0     & 1   \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Conditional p.m.f of $X_1$ given $X_2$}
+\begin{tabular}{c|ccc}
+\toprule
+$X_1 \backslash X_2$ & $x_1^2$ & $x_2^2$ & $x_3^2$ \\
+\midrule
+$x_1^1$ & 0     & 0     & 1/2 \\
+$x_2^1$ & 0     & 1/2   & 0   \\
+$x_3^1$ & 1     & 0     & 0   \\
+$x_4^1$ & 0     & 1/2   & 0   \\
+$x_5^1$ & 0     & 0     & 1/2 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Checkerboard copula regression of $U_2$ on $U_1$}
+\begin{tabular}{c|ccc}
+\toprule
+$u_1 $ & $r_{U_2|U_1}(u_1)$ \\
+\midrule
+$[0,2/8]$         & 12/16               \\
+$(2/8,3/8]$       & 6/16                \\
+$(3/8,5/8]$       & 2/16                \\
+$(5/8,6/8]$       & 6/16                \\
+$(6/8,1]$         & 12/16               \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Checkerboard copula regression of $U_1$ on $U_2$}
+\begin{tabular}{c|ccc}
+\toprule
+$u_2 $ & $r_{U_1|U_2}(u_2)$ \\
+\midrule
+$[0,2/8]$         & 1/2                \\
+$(2/8,4/8]$       & 1/2                \\
+$(4/8,1]$         & 1/2                \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+:::
+
+### Point Prediction Using CCR
+
+The CCR and its prediction is designed to explore and identify the potential regression association between an ordinal response variable and a set of categorical predictors of interest. Thus, we can use @def-checkerboard-copula-regression for predicting the category of response variable for a given combination of categories of explanatory variables, while describing the dependence structure between them.
+
+Suppose that $X_j$ is the response variable, and all the remaining variables in the table (denoted by $\mathbf{X}_{-j}$) are to be used as predictors. Recall @def-conditional-pmf-d-way-contable, where we denote (finite and discrete) range of the marginal distribution of $X_j$ to be $D_j=\{u_0^j, \dots, u_{i_j}^j, \dots, u_{I_j}^j\}$. Then, $u_0^j = 0$, $u_{I_j}^j = 1$, and $u_{i_j}^j = \sum_{k_j=1}^{i_j} p_{+k_j+}$. As mentioned in @weikim, we can use this to find $\mathbf{u}_{-j}^*$ from $Ran(\mathbf{X}_{-j}) = \prod_{k=1, k \neq j}^d D_k$. Using this along with @def-checkerboard-copula-regression gives us the estimated value of the checkerboard copula regression, $u_j^*=r_{U_j|\mathbf{U}_{-j}}(\mathbf{u}_{-j}^*)$. Now, using this we can obtain $i_j^*$ and $u_{i_j^*}^j$ such that $u_{i_j^*-1}^j < u_j^* < u_{i_j^*}^j$. This finally leads us to the predicted category $x_{i_j^*}^j$ of the response variable $X_j$.
+
+In order to better understand this, let's walk through the example at hand.
+
+::: {.example}
+### 2-D Example (continued...)
+[Adapted from @weikim]  
+Upon application of the method detailed above, we can predict the category of $X_2$ for each category of $X_1$. For instance, given that $X_1 = x_3^1 = x_{i_1=3}^{1*}$, the corresponding $u_3^{1*} = 5/8$, and thus the predicted value of the CCR is $u_2^* = r_{U_2|U_1}(5/8) = 1/8 \in [0,2/8]$. This implies that $i_2^* = 1$ and $u_{i_2^*=1}^2 = 2/8$ because $u_0^2 = 0 < u_2^* = 1/8 \le u_1^2 = 2/8$. Hence, the predicted category of $X_2$ given $X_1 = x_3^1$ is $f_{X_2|X_1}(x_3^1) = x_1^2$.
+
+After applying this method to all combinations of predictors and response, we obtain the following tabular representations of point predictions through CCR.
+
+\begin{table}[H]
+\centering
+\caption{Point prediction through CCR of $X_2$ on $X_1$}
+\begin{tabular}{c|ccc}
+\toprule
+$X_1 $ & $u_2^*$ & $f_{X_2|X_1}$ \\
+\midrule
+$x_1^1$           & 6/8     & $x_3^2$       \\
+$x_2^1$           & 3/8     & $x_2^2$       \\
+$x_3^1$           & 1/8     & $x_1^2$       \\
+$x_4^1$           & 3/8     & $x_2^2$       \\
+$x_5^1$           & 6/8     & $x_3^2$       \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{Point prediction through CCR of $X_1$ on $X_2$}
+\begin{tabular}{c|ccc}
+\toprule
+$X_2 $ & $u_1^*$ & $f_{X_1|X_2}$ \\
+\midrule
+$x_1^2$           & 1/2     & $x_3^1$       \\
+$x_2^2$           & 1/2     & $x_3^1$       \\
+$x_3^2$           & 1/2     & $x_3^1$       \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+:::
+
+We can clearly see from the above tables how the prediction results reflect the quadratic relationship shown when we first established this 2-D example at the start of this chapter.
+
+### Empirical Estimation of CCR and Point Prediction {#sec-empirical-ccr}
+
+Now, continuing from the notation established in @sec-empirical-ccs, we can estimate CCR for $k \in {1, \dots, j-1, j+1, \dots, d}$,
+
+$$
+\hat{r}_{U_j|\mathbf{U}_{-j}}(\mathbf{u}_{-j}) = \sum_{i_j=1}^{I_j} \hat{p}_{i_j|\mathbf{i}_{-j}}\hat{s}_{i_j}^j \space \text{  for } \hat{u}_{i_k-1} < u_k \le \hat{u}_{i_k}^k
+$$
+
+Now, using the above alongside the steps we mentioned in previous subsection, we can obtain the predicted category of a response variable for each combination categories of predictors. That is, for a given combination categories of the $(d-1)$-predictors $\mathbf{X}_{-j}$, we find the corresponding $\mathbf{\hat{u}}_{-j}^*$ from the estimated ranges of $\mathbf{X}_{-j}$ and then obtain the estimated value of the CCR as mentioned above, $\hat{u}_j^* = \hat{r}_{U_j|\mathbf{U}_{-j}}(\mathbf{\hat{u}}_{-j}^*)$. From the estimated range of a response variable $X_j$, we get $i_j^*$ and $\hat{u}_{i_j^*}^j$ such that $\hat{u}_{i_j^*-1}^j < \hat{u}_j^* \le \hat{u}_{i_j^*}^j$. This implies that the predicted category of $X_j$ is $\hat{x}_{i_j^*}^j$.
+
+More details on these estimators including asymptotic analysis are outside the scope of this work, but are discussed at length in @weikim.
+
+### Uncertainty Evaluation of the CCR prediction using nonparametric bootstrap 
+
+To quantify the uncertainty of the predicted category obtained from CCR, we can use nonparametric bootstrap. This involves generating multiple bootstrap samples from the original contingency table, computing the checkerboard copula regression for each resampled dataset, and then predicting the category of the response variable for each combination of categories of the explanatory variables.
+
+For each bootstrap sample, we follow these steps:
+
+1. Resample with replacement from the original data to create a bootstrap sample with the same size as the original data.
+
+2. Estimate the checkerboard copula regression based on this bootstrap sample
+
+3. Predict the category of the response variable using the estimated regression
+
+4. Repeat steps 1-3 multiple times (e.g., 1000 times)
+
+The distribution of predicted categories across bootstrap samples provides a measure of the prediction uncertainty. We can calculate the proportion of times each category is predicted for a given combination of explanatory variables, with higher proportions indicating greater confidence in the prediction.
+
+For example, in our 2-D contingency table, using 1000 bootstrap resamples, we quantified the uncertainty of the predicted category of $X_2$ for each category of $X_1$. The results showed that the proportion of bootstrap samples where the predicted category matched our original prediction was 100%, indicating high confidence in our predictions.
+
+## Checkerboard Copula Regression Association Measure
+
+Using CCR discussed above, @weikim proposed the checkerboard copula regression based association measure (CCRAM) for a multi-way contingency table with an ordinal response variable and categorical (ordinal or nominal) explanatory variables.
+
+::: {#def-CCRAM}
+### Checkerboard Copula Regression-Based Association Measure (CCRAM)
+[@weikim]
+The **checkerboard copula regression-based association measure (CCRAM)** of $X_j$ on $\mathbf{X}_{-j}=(X_1,\ldots,X_{j-1},X_{j+1},\ldots,X_d)^\top$ is 
+$$
+\rho_{(\mathbf{X}_{-j}\rightarrow X_j)}^2 \equiv \frac{\text{Var}[r_{U_j|\mathbf{U}_{-j}}(\mathbf{U}_{-j})]}{\text{Var}(U_j)} = \frac{\text{E}\left[\left(r_{U_j|\mathbf{U}_{-j}}(\mathbf{U}_{-j})-1/2\right)^2\right]}{1/12} = 12 \sum_{\mathbf{i}_{-j}=\mathbf{1}}^{\mathbf{I}_{-j}} \left(\sum_{i_j=1}^{I_j} p_{i_j|\mathbf{i}_{-j}}s_{i_j}^j - 1/2\right)^2 p_{i_1,...,+_j,...,i_d}
+$$
+where $j \in \{1,\ldots,d\}$, and $U_j$ and $\mathbf{U}_{-j} = (U_1,\ldots,U_{j-1},U_{j+1},\ldots,U_d)^\top$ are the random variables on $[0,1]^d$ associated with the checkerboard copula density $c^*(\mathbf{u})$ in @def-checkerboard-copula.
+:::
+
+Extending what is proven for this new measure, @weikim provides a proposition with proof containing several properties of CCRAM concluding that
+
+- CCRAM can identify linear and non-linear relationship between a response variable and several explanatory variables. CCRAM can also be applied when any predictors are nominal and/or a response variable is binary.
+
+- CCRAM is lower bounded by 0 and upper bounded by $12\sigma_{S_j}^2$, where 0 means no contribution of predictors to the construction of the checkerboard copula regression function.
+
+In order to provide a normalized measure that is independent of marginal distribution of $X_j$, @weikim proposes SCCRAM, which is a scaled version of CCRAM, and it is mathematically defined as follows:
+
+::: {#def-SCCRAM}
+### Scaled Checkerboard Copula Regression-Based Association Measure (SCCRAM)
+[@weikim]
+The **scaled checkerboard copula regression-based association measure (SCCRAM)** of $X_j$ on $\mathbf{X}_{-j}=(X_1,\ldots,X_{j-1},X_{j+1},\ldots,X_d)^\top$ is defined as
+$$
+\rho_{(\mathbf{X}_{-j}\rightarrow X_j)}^{2*} = \frac{\rho_{(\mathbf{X}_{-j}\rightarrow X_j)}^{2}}{12\sigma_{S_j}^2}
+$$
+
+where $\rho_{(\mathbf{X}_{-j}\rightarrow X_j)}^{2}$ and $\sigma_{S_j}^2$ are defined as in @def-CCRAM and @lem-mean-var-S respectively.
+:::
+
+(S)CCRAM is designed to quantify the regression association identified by Checkerboard Copula Regression and its prediction.
+
+::: {.example}
+### 2-D Example (continued...)
+[Adapted from @weikim]  
+Using the above definitions, we obtain: $(\rho_{(X_1\rightarrow X_2)}^2, 12\sigma_{S_2}^2 \rho_{(X_1\rightarrow X_2)}^{2*}) = (27/32,27/32,1)$ and $(\rho_{(X_2\rightarrow X_1)}^2, 12\sigma_{S_1}^2, \rho_{(X_2\rightarrow X_1)}^{2*}) = (0,243/256,0)$. 
+
+$\rho_{(X_1\rightarrow X_2)}^{2*}=1$ implies that $X_1$ perfectly explains the variation in $X_2$ induced by its checkerboard copula score and its marginal distribution and this result agrees with the observation that $r_{U_2|U_1}(u_1)$ equals one and only one of the checkerboard score of $X_2$. Note that this result also supports the fact that $X_2$ is functionally dependent on $X_1$ with probability 1. On the other hand, $\rho_{(X_2\rightarrow X_1)}^{2*}=0$ means that $r_{U_1|U_2}(u_2)=E(U_1) = 1/2, \forall u_2$. Thus, $X_2$ has no contribution arising from its score and its marginal distribution in explaining the variation in $X_1$.
+:::
+
+### Empirical Estimation of (S)CCRAM
+
+Now, continuing from the notation established in @sec-empirical-ccs, the estimators for the CCRAM and SCCRAM as defined in @def-CCRAM and @def-SCCRAM respectively are given below:
+
+$$
+\hat{\rho}_{(\mathbf{X}_{-j}\rightarrow X_j)}^2 = 12 \sum_{\mathbf{i}_{-j}=\mathbf{1}}^{\mathbf{I}_{-j}} \left(\sum_{i_j=1}^{I_j} \hat{p}_{i_j|\mathbf{i}_{-j}}\hat{s}_{i_j}^d - \frac{1}{2}\right)^2 \hat{p}_{i_1,...,+_j,...,i_d}, \quad \quad \hat{\rho}_{(\mathbf{X}_{-j}\rightarrow X_j)}^{2*} = \frac{\hat{\rho}_{(\mathbf{X}_{-j}\rightarrow X_j)}^{2}}{12\hat{\sigma}_{S_j}^2}
+$$
+
+### Uncertainty Evaluation of the estimated (S)CCRAM using nonparametric bootstrap distribution and its confidence interval {#sec-bootstrap-ccram}
+
+To assess the uncertainty of the estimated (S)CCRAM, we can employ nonparametric bootstrap to generate an empirical sampling distribution. This approach involves:
+
+1. Generate B bootstrap samples of same size as original data (typically $B=1000$) by resampling with replacement from the original data.
+
+2. For each bootstrap sample $b = 1, \ldots, B$, compute the estimated (S)CCRAM, denoted as $\hat{\rho}_{(\mathbf{X}_{-j}\rightarrow X_j),b}^{2}$ and $\hat{\rho}_{(\mathbf{X}_{-j}\rightarrow X_j),b}^{2*}$.
+
+3. Construct the empirical bootstrap distribution of the estimates $\{ \hat{\rho}_b^2 \}_{b=1}^B$.
+
+From this bootstrap distribution, we can:
+
+Calculate the bootstrap standard error as the standard deviation of the bootstrap estimates, and construct confidence intervals using various methods:
+
+- Percentile Method [@Davison1997]: The $(1 - \alpha) \times 100\%$ confidence interval is given by the $\alpha/2$ and $1 - \alpha/2$ quantiles of the bootstrap distribution: $\left[ \hat{\rho}^2_{\alpha/2}, \hat{\rho}^2_{1 - \alpha/2} \right]$
+
+- Basic (Reverse Percentile) Method [@hesterberg2014teachersknowbootstrapresampling]: This method reflects the bootstrap quantiles around the original estimate to produce the interval: $\left[ 2\hat{\rho}^2 - \hat{\rho}^2_{1 - \alpha/2}, \; 2\hat{\rho}^2 - \hat{\rho}^2_{\alpha/2} \right]$, where $\hat{\rho}^2$ is the (S)CCRAM estimate from the original dataset.
+
+- BCa (Bias-Corrected and Accelerated) Method [@Efron1987]: This method adjusts the interval to correct for both bias and skewness in the bootstrap distribution, using acceleration and bias-correction terms derived from the data. It tends to offer better coverage properties, especially in small samples or skewed distributions.
+
+These confidence intervals provide a principled way to quantify the precision of the (S)CCRAM estimates, offering insight into the variability due to sampling and helping assess the statistical significance of regression dependence.
+
+### Statistical significance of the estimated (S)CCRAM using Permutation distribution and its hypothesis testing {#sec-permutation-ccram}
+
+In case of CCRAM, @weikim proposes permutation testing for null hypothesis $H_0: \rho_{(\mathbf{X}_{-j}\rightarrow X_j)}^{2} = 0$, which indicates no association between the response variable and the explanatory variables.
+
+The permutation testing procedure involves:
+
+1. Calculate the observed (S)CCRAM value for the original data
+
+2. Generate $M$ permutation samples (typically $M=10^6$) by randomly permuting the response variable values while keeping the explanatory variables fixed, thus breaking any potential association
+
+3. For each permutation sample $m = 1,\ldots,M$, compute the (S)CCRAM, denoted as $\hat{\rho}_{(\mathbf{X}_{-j}\rightarrow X_j),m}^{2}$ and $\hat{\rho}_{(\mathbf{X}_{-j}\rightarrow X_j),m}^{2*}$
+
+4. Construct the empirical permutation distribution of the estimates under the null hypothesis
+
+5. Calculate the p-value as the proportion of permutation statistics that are as extreme as or more extreme than the observed statistic:
+   $$p\text{-value} = \frac{1}{M}\sum_{m=1}^{M} I(\hat{\rho}_{(\mathbf{X}_{-j}\rightarrow X_j),m}^{2} \geq \hat{\rho}_{(\mathbf{X}_{-j}\rightarrow X_j),obs}^{2})$$
+
+If the p-value is less than a predetermined significance level (e.g., $0.05$), we reject the null hypothesis and conclude that there is a significant association between the response variable and the explanatory variables.
+
+This permutation approach provides a distribution-free method for hypothesis testing, analogous to testing $R^2=0$ in linear regression, but appropriate for the categorical data context of the checkerboard copula regression.
+
+## Visualization Methods
+
+As mentioned before, effective visualization is crucial for understanding and interpreting the regression associations identified by checkerboard copula regression. @Liao2024 details several visualization approaches that are particularly suited for displaying the dependence structures in multi-dimensional contingency tables with an ordinal response variable.
+
+### Cross-tabulation
+
+For simpler two-way contingency tables (as seen in ice cream study example within @Liao2024), cross-tabulation provides a straightforward approach to visualize the predicted categories of the response variable for each category of the explanatory variable. One can enhance these tables by color-coding the predicted categories and including bootstrap proportions to represent prediction uncertainty. This allows for clear comparison between the observed regression pattern and the pattern expected under independence.
+
+### Bubble Plots
+
+When dealing with higher-dimensional contingency tables (such as the back pain data with three explanatory variables in @weikim), bubble plots offer an effective visualization approach. In these plots, the x-axis represents different combinations of categories of explanatory variables, while the y-axis shows the categories of the response variable. The predicted category for each combination is indicated by dark dots, and bubbles (circles) with varying sizes represent the proportion of times each category is predicted across bootstrap samples. This visualization clearly reveals complex association patterns, such as potential interaction effects among explanatory variables.
+
+### Doubledecker Plots
+
+For multi-dimensional contingency tables with temporal or hierarchical structure (as in Three Mile Island data within @Liao2024), doubledecker plots provide a particularly insightful visualization. These plots display vertical splits for explanatory variables and horizontal splits for the response variable. The width of each bar is proportional to the observed frequency of the corresponding combination of explanatory variables, while the heights of color-coded blocks within each bar represent the proportions of predicted categories across bootstrap samples. This approach effectively visualizes both the magnitude and uncertainty of predictions while accounting for the natural ordering or hierarchy among variables.
+
+All these visualization methods can be paired with corresponding "null reference" plots generated through permutation methods, allowing researchers to visually assess whether the detected regression patterns significantly differ from those expected under independence. This combination of exploratory visualization and resampling-based calibration provides a comprehensive framework for understanding regression dependence in categorical data without relying on parametric assumptions.
