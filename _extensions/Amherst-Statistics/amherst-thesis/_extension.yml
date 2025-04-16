@@ -34,7 +34,6 @@ contributes:
           echo: false
           warning: false
           message: false
-          eval: false
       code-line-numbers: true
       code-block-bg: "#f8f8f8"
       # Uncomment the line below if you want a code block border
