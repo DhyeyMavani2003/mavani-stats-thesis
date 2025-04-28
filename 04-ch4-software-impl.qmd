@@ -21,7 +21,7 @@ In this chapter, we introduce `ccrvam`, a Python package that implements the Che
 
 ## Set-up and Example Data
 
-The `ccrvam` package is built for analyzing multi-dimensional contingency tables with an ordinal response variable and a set of categorical (nominal/ordinal) explanatory variables/predictors. This aligns perfectly with the theoretical frameworks established in @sec-ccrvam. The package is designed with ease of installation and use in mind, particularly within Jupyter Notebook environments common in data analysis workflows.
+The `ccrvam` package is built to analyze multi-dimensional contingency tables with an ordinal response variable and a set of categorical (nominal/ordinal) explanatory variables/predictors. This aligns perfectly with the theoretical frameworks established in @sec-ccrvam. The package is designed with ease of installation and use in mind, particularly within Jupyter Notebook environments common in data analysis workflows.
 
 ### Installation
 
@@ -33,18 +33,20 @@ For quick use in Jupyter Notebooks, the package can be installed directly from P
 #| echo: true
 #| output: false
 
-pip install ccrvam==0.9.6
+pip install ccrvam==1.0.0
 ```
 
-For more containerized production-heavy work, it's recommended to use a custom virtual environment. Instructions for setting that up can be found in [ccrvam/.github/README.md](https://github.com/DhyeyMavani2003/ccrvam?tab=readme-ov-file#readme).
+This thesis uses and demonstrates functionality based on version `v1.0.0` of the `ccrvam` package. While this version captures the stable features implemented during the course of this work, the package remains under active development. The most recent release, along with version history and updates, is available on [pypi.org/project/ccrvam](https://pypi.org/project/ccrvam/).
+
+For more containerized production-heavy work, a custom virtual environment is recommended. Instructions for setting that up can be found at [ccrvam/.github/README.md](https://github.com/DhyeyMavani2003/ccrvam?tab=readme-ov-file#readme).
 
 ## Types of Input Data Supported
 
-The `ccrvam` package is designed to be flexible with respect to input data formats. The package supports these as main formats:
+The `ccrvam` package is designed to be flexible with respect to input data formats. The package supports these as the main formats:
 
 ### Loading from Contingency Table Format (In-Place)
 
-The `ccrvam` package implements the theoretical framework outlined in @sec-ccrvam by operating on multi-dimensional contingency tables. These tables represent the joint distribution of categorical variables where: one variable is explicitly designated as an ordinal response (dependent variable); one or more variables function as categorical predictors (independent variables); and table entries contain frequency counts of observations. The package accepts these contingency tables directly as NumPy arrays, with each dimension corresponding to the categories of a particular variable. This structure allows for efficient computation of the checkerboard copula scores and subsequent association measures while preserving the natural ordering of the response variable categories and accommodating multiple categorical predictors simultaneously.
+The `ccrvam` package implements the theoretical framework outlined in @sec-ccrvam by operating on multi-dimensional contingency tables. These tables represent the joint distribution of categorical variables where one variable is explicitly designated as an ordinal response (dependent variable), one or more variables function as categorical predictors (independent variables), and table entries contain frequency counts of observations. The package accepts these contingency tables directly as NumPy arrays, with each dimension corresponding to the categories of a particular variable. This structure allows for efficient computation of the checkerboard copula scores and subsequent association measures while preserving the natural ordering of the response variable categories and accommodating multiple categorical predictors simultaneously.
 
 For example, consider the 2-D example from the previous chapter:
 
@@ -77,21 +79,21 @@ For higher dimensions, the package supports multi-dimensional NumPy arrays repre
 
 ### Loading from External Data Files
 
-Through `DataProcessor` class in our package (`ccrvam`), we support flexible loading of categorical data in multiple formats, accommodating diverse data structures commonly encountered in statistical analysis. The class provides a unified interface for importing data regardless of its original format, making it accessible for CCRVAM analysis without requiring extensive preprocessing.
+Through the `DataProcessor` class in our package (`ccrvam`), we support the flexible loading of categorical data in multiple formats, accommodating diverse data structures commonly encountered in statistical analysis. The class provides a unified interface for importing data regardless of its original format, making it accessible for CCRVAM analysis without requiring extensive preprocessing.
 
 The `DataProcessor` class supports three primary data formats:
 
 1.  **Case-form data:** Where each row represents an individual case with categorical variables organized in separate columns, allowing for straightforward representation of raw survey or experimental results. 
 
-2.  **Frequency-form data:** Where each row to contain a unique combination of categorical variables along with their corresponding frequency count, offering a more compact representation when many observations share identical category combinations.
+2.  **Frequency-form data:** Each row contains a unique combination of categorical variables and their corresponding frequency count, offering a more compact representation when many observations share identical category combinations.
 
-3.  **Table-form data:** Where direct contingency tables are represented as multi-dimensional arrays, which provides the most computationally efficient input format when data has already been aggregated into contingency tables by other statistical software.
+3.  **Table-form data:** Where direct contingency tables are represented as multi-dimensional arrays, providing the most computationally efficient input format when other statistical software aggregates data into contingency tables.
 
-The implementation also includes robust handling of several key data management features. The package supports custom variable naming schemes, allowing users to define meaningful labels for their variables rather than relying on default numeric identifiers. It provides automatic mapping of non-integer category values to integer indices, enabling seamless processing of categorical data with text or mixed-type labels. The software accommodates custom delimiters for text-based input files, offering flexibility when importing data from various sources with different formatting conventions. Additionally, the implementation supports dimensional specification for proper array structuring, ensuring that contingency tables are correctly shaped according to the number of categories in each variable, which is essential for accurate computation of the checkerboard copula scores and associated.
+The implementation also includes robust handling of several key data management features. The package supports custom variable naming schemes, allowing users to define meaningful labels for their variables rather than relying on default numeric identifiers. It automatically maps non-integer category values to integer indices, enabling seamless processing of categorical data with text or mixed-type labels. The software accommodates custom delimiters for text-based input files, offering flexibility when importing data from various sources with different formatting conventions. Additionally, the implementation supports the dimensional specification for proper array structuring, ensuring that contingency tables are correctly shaped according to the number of categories in each variable. This is essential for accurate computation of the checkerboard copula scores and associated.
 
-This flexible approach to data loading ensures compatibility with various data collection methodologies and storage formats, allowing researchers to focus on analysis rather than data conversion. The `DataProcessor` integrates seamlessly with `GenericCCRVAM` class to initialize model objects directly from imported data, creating a streamlined workflow from raw data to statistical inference. Detailed examples demonstrating each data format, along with corresponding code snippets and implementation considerations, are provided in @sec-rda.
+This flexible approach to data loading ensures compatibility with various data collection methodologies and storage formats, allowing researchers to focus on analysis rather than data conversion. The `DataProcessor` integrates seamlessly with the `GenericCCRVAM` class to initialize model objects directly from imported data, creating a streamlined workflow from raw data to statistical inference. Detailed examples demonstrating each data format, corresponding code snippets, and implementation considerations are provided in @sec-rda.
 
-## Checkerboard copula score (especially an ordinal response variable)
+## Checkerboard copula score (for ordinal response variable)
 
 Following the theoretical foundation in @def-ccs, the package implements checkerboard copula scores for ordinal variables. These scores represent a transformation that leverages the inherent ordering information in ordinal variables.
 
@@ -106,12 +108,12 @@ The implementation maintains fidelity to the mathematical definitions while prov
 scores_X1 = ccrvam_obj.calculate_ccs(1)
 print(scores_X1)
 
-# Calculate and display Variance of CCS for X1
+# Calculate and display the Variance of CCS for X1
 variance_ccs_X1 = ccrvam_obj.calculate_variance_ccs(1)
 print(variance_ccs_X1)
 ```
 
-Recall that for each ordinal variable $X_j$ with categories $i_j \in \{1, \ldots, I_j\}$, the scores $s_{i_j}^j = (u_{i_j-1}^j + u_{i_j}^j)/2$ are calculated where $u_{i_j}^j$ is defined by the marginal cumulative distribution. This implementation follows directly from the empirical estimation procedure detailed in @sec-empirical-ccs. We can see how the output from the above code-chunk matches with the result in our running example from @sec-ccrvam, which further verifies the reproducible functionality of our package.
+Recall that for each ordinal variable $X_j$ with categories $i_j \in \{1, \ldots, I_j\}$, the scores $s_{i_j}^j = (u_{i_j-1}^j + u_{i_j}^j)/2$ are calculated where $u_{i_j}^j$ is defined by the marginal cumulative distribution. This implementation follows directly from the empirical estimation procedure detailed in @sec-empirical-ccs. We can see how the output from the above code-chunk matches the result in our running example from @sec-ccrvam, which further verifies the reproducible functionality of our package.
 
 `ccrvam` employs vectorized operations through NumPy [@numpy] to ensure computational efficiency, which becomes particularly important for higher-dimensional tables. The variance calculation implements @lem-mean-var-S, providing a measure of dispersion that is essential for the scaled association measures discussed later.
 
@@ -121,9 +123,9 @@ The Checkerboard Copula Regression functionality follows the definition provided
 
 The prediction functionality follows the empirical estimation procedure described in #sec-empirical-ccr, where the predicted category $\hat{x}_{i_j^*}^j$ is determined by finding the interval containing the estimated regression value $\hat{u}_j^* = \hat{r}_{U_j|\mathbf{U}_{-j}}(\hat{\mathbf{u}}_{-j}^*)$.
 
-The `get_category_predictions_ccr()` method performs the essential function of predicting the categories of the response variable (specified through the response input argument) based on given predictor values (enumerated in the predictors input argument). This method implements the core predictive capability of the checkerboard copula regression approach, translating theoretical associations into practical category predictions. The method returns these predictions in an easy-to-read Pandas [@pandas] DataFrame format, making it straightforward for researchers to examine and interpret the results in a familiar tabular structure. Additionally, the method supports custom variable names for enhanced interpretation, allowing users to replace default numeric identifiers with meaningful labels that reflect the actual variables being analyzed in their specific domain context.
+The `get_category_predictions_ccr()` method performs the essential function of predicting the categories of the response variable (specified through the response input argument) based on given predictor values (enumerated in the `predictors` input argument). This method implements the core predictive capability of the checkerboard copula regression approach, translating theoretical associations into practical category predictions. The method returns these predictions in an easy-to-read Pandas [@pandas] DataFrame format, making it straightforward for researchers to examine and interpret the results in a familiar tabular structure. Additionally, the method supports custom variable names for enhanced interpretation. It allows users to replace default numeric identifiers with meaningful labels that reflect the actual variables being analyzed in their specific domain context.
 
-The implementation also allows for multiple conditioning axes, supporting complex multivariate analyses, which we can be seen in the examples mentioned in @sec-examples.
+The implementation also allows for multiple conditioning axes, supporting complex multivariate analyses, as seen in the examples mentioned in @sec-examples.
 
 ```{python}
 #| label: calculate-2d-ccr
@@ -136,6 +138,12 @@ predictions_X1_to_X2 = ccrvam_obj.get_predictions_ccr(
     response=2
 )
 print(predictions_X1_to_X2)
+```
+
+```{python}
+#| label: calculate-2d-ccr-custom
+#| echo: true
+#| output: true
 
 # Example: Showcasing the use of custom variable names for the output
 # Predictions from Education Level to Income Bracket:
@@ -151,9 +159,9 @@ predictions_Education_to_Income = ccrvam_obj.get_predictions_ccr(
 print(predictions_Education_to_Income)
 ```
 
-The package also provides reference prediction under joint independence, which is important for interpreting the substantive meaning of predictions by comparing against what would be expected if no association existed.
+The package also provides reference prediction under joint independence, which is important for interpreting the substantive meaning of predictions by comparing them against what would be expected if no association existed.
 
-Hence, we can also obtain the response category prediction under the assumption of joint independence between X1 and X2 as follows:
+Hence, we can also obtain the response category prediction under the assumption of joint independence between $X_1$ and $X_2$ as follows:
 
 ```{python}
 #| label: calculate-2d-ccr-jointindep
@@ -179,7 +187,7 @@ These visualizations help researchers understand and communicate the complex dep
 #| echo: true
 #| output: true
 
-# Plotting with default naming scheme with tuple labels on x-axis
+# Plotting with default naming scheme with tuple labels on the x-axis
 ccrvam_obj.plot_ccr_predictions(
   predictors=[1],
   response=2,
@@ -193,8 +201,8 @@ ccrvam_obj.plot_ccr_predictions(
 #| echo: true
 #| output: true
 
-# Plotting with custom naming scheme with legend of category combinations
-var_names={1:"Income", 2:"Education"}
+# Plotting with the custom naming scheme with the legend of category combinations
+var_names={1: "Income", 2: "Education"}
 
 ccrvam_obj.plot_ccr_predictions(
   predictors=[2],
@@ -211,7 +219,7 @@ To quantify prediction uncertainty, the package implements nonparametric bootstr
 ```{python}
 #| label: bootstrap-2d-ccr
 #| echo: true
-#| output: true
+#| output: false
 
 from ccrvam import bootstrap_predict_ccr_summary
 
@@ -223,6 +231,12 @@ prediction_matrix = bootstrap_predict_ccr_summary(
     response_name="Y",
     n_resamples=9999
 )
+```
+
+```{python}
+#| label: bootstrap-2d-ccr-display
+#| echo: true
+#| output: true
 
 # Predictions Summary Matrix
 print(prediction_matrix)
@@ -238,14 +252,14 @@ print(prediction_matrix.predictions)
 
 This implementation follows the nonparametric bootstrap procedure outlined in the previous chapter, where multiple bootstrap samples are generated from the original contingency table, and predictions are made for each resampled dataset. The distribution of predicted categories provides a measure of prediction uncertainty, represented as percentages in the resulting heatmap visualization.
 
-The visualization component employs a color gradient to represent the confidence in predictions, with darker colors indicating higher prediction percentages (greater confidence). Dotted lines indicate predictions under joint independence, providing a reference point for interpretation. More input arguments and options for customization can be explored further in <https://ccrvam.readthedocs.io/>, which hosts detailed documentation for our `ccrvam` package.
+The visualization component employs a color gradient to represent the confidence in predictions, with darker colors indicating higher prediction percentages (greater confidence). Dotted lines indicate predictions under joint independence, providing a reference point for interpretation. More input arguments and options for customization can be explored further in [ccrvam.readthedocs.io](https://ccrvam.readthedocs.io/), which hosts detailed documentation for our `ccrvam` package.
 
 ```{python}
 #| label: visualize-bootstrap-2d-ccr
 #| echo: true
 #| output: true
 
-# You can also visualize the results with the attached plotting method
+# We can also visualize the results with the attached plotting method
 prediction_matrix.plot_prediction_heatmap()
 ```
 
@@ -272,13 +286,15 @@ sccram_X1_to_X2 = ccrvam_obj.calculate_CCRAM(
 print(f"SCCRAM X1 to X2: {sccram_X1_to_X2:.4f}")
 ```
 
-The implementation follows the empirical estimation procedures outlined in the previous chapter, with CCRAM measuring the proportion of variance in the response variable's checkerboard copula score that can be explained by the predictor variables. SCCRAM normalizes this measure to be bounded between 0 and 1, making it easier to interpret and compare across different datasets.
+The implementation follows the empirical estimation procedures outlined in the previous chapter. CCRAM measures the proportion of variance in the response variable's checkerboard copula score that the predictor variables can explain. SCCRAM normalizes this measure to be bounded between 0 and 1, making it easier to interpret and compare across different datasets.
 
 Both measures quantify the strength of even the nonlinear regression relationship between the ordinal response variable and categorical predictors, going beyond traditional correlation measures that primarily detect linear relationships.
 
 ## (S)CCRAM Uncertainty Evaluation Using Bootstrap Resampling
 
-As mentioned in @sec-bootstrap-ccram, in order to assess the precision of CCRAM and SCCRAM estimates, the package implements nonparametric bootstrap procedures:
+As mentioned in @sec-bootstrap-ccram, in order to assess the precision of CCRAM and SCCRAM estimates, the package implements nonparametric bootstrap procedures. `ccrvam` incorporates nonparametric bootstrap procedures based on the `scipy.stats.bootstrap` function [@scipy]. This approach allows users to generate confidence intervals and visualize the empirical distribution of estimated dependence measures, improving inference in discrete multivariate settings.
+
+The bootstrap procedure follows three steps: (1) generating multiple resampled datasets from the original contingency table with replacement; (2) computing the (S)CCRAM statistic for each resample using a custom `ccram_stat` function; and (3) calculating confidence intervals based on the resulting distribution, following the methodology of user's choice ("percentile", "BCa", "basic") from SciPy [@scipy].
 
 ```{python}
 #| label: bootstrap-2d-ccram
@@ -322,10 +338,10 @@ print(f"{type(bootstrap_estimates)}")
 bootstrap_mean = np.mean(bootstrap_estimates)
 bootstrap_bias = bootstrap_mean - ccram_result.observed_value
 
-# Calculate bootstrap standard error
+# Calculate the bootstrap standard error
 bootstrap_std_error = np.std(bootstrap_estimates, ddof=1)
 
-# Calculate ratio of bias to standard error
+# Calculate the ratio of bias to standard error
 bias_to_se_ratio = bootstrap_bias / bootstrap_std_error
 
 # Additional Bootstrap Statistics
@@ -335,13 +351,17 @@ print(f"Bootstrap Standard Error: {bootstrap_std_error:.4f}")
 print(f"Bias to Standard Error Ratio: {bias_to_se_ratio:.4f}")
 ```
 
-The bootstrap procedure generates multiple resamples from the original contingency table, calculates the (S)CCRAM for each resample, and constructs confidence intervals based on the resulting distribution. This provides a measure of the sampling variability and precision of the (S)CCRAM estimate.
+The bootstrap procedure generates multiple resamples from the original contingency table, calculates each resample's (S)CCRAM, and constructs confidence intervals based on the resulting distribution. This provides a measure of the sampling variability and precision of the (S)CCRAM estimate. The implementation builds directly on SciPy's `bootstrap` function, which allows users to specify the statistic of interest as a callable and automatically handles paired resampling, confidence interval construction, and standard error estimation. We set `vectorized=True` during our SciPy API call to enable fast computation over multiple resamples. As for the above example, we use `method="percentile"` to derive confidence intervals from the empirical quantiles of the bootstrap distribution. But user is allowed to use `"basic"` or `"BCa"` depending on their needs and preferences.
 
-The visualization component plots the bootstrap distribution with the observed (S)CCRAM value highlighted, providing a graphical representation of the uncertainty in the estimate. This analysis can be repeated for SCCRAM by setting `scaled = True` as an input argument of the `bootstrap_ccram()` function.
+The visualization component plots the bootstrap distribution with the observed (S)CCRAM value highlighted, providing a graphical representation of the uncertainty in the estimate. The auto-plotting in the `CustomBootstrapResult` object highlights the observed value within the distribution, offering a visual representation of uncertainty.
+
+This analysis can be repeated for SCCRAM by setting `scaled = True` as an input argument of the `bootstrap_ccram()` function.
 
 ## Statistical Significance Testing for (S)CCRAM Using Permutation Test
 
-As mentioned in @sec-permutation-ccram, in order to assess the statistical significance of CCRAM or SCCRAM, the package implements permutation testing as well. We demonstrate the usage of the same in the case of our 2-D example below:
+As mentioned in @sec-permutation-ccram, the package also implements permutation testing to assess the statistical significance of CCRAM or SCCRAM. We use permutation testing functionality `scipy.stats.permutation_test` from SciPy [@scipy]. This procedure randomly permutes the response labels while keeping the predictor structure fixed, forming a null distribution against which the observed statistic is compared.
+
+We demonstrate the usage of the same within our package `ccrvam` in the case of the 2-D example below:
 
 ```{python}
 #| label: permutation-2d-ccram
@@ -392,9 +412,11 @@ print(f"0.99-th Quantile: {q99:.4f}")
 print(f"Interquartile Range (IQR): {iqr:.4f}")
 ```
 
-This implementation follows the permutation testing procedure outlined in the @sec-ccrvam, where the response variable values are randomly permuted to break any association with the predictor variables, thus generating a null distribution under the hypothesis of no association. The p-value is calculated as the proportion of permutation statistics that are as extreme as or more extreme than the observed statistic.
+This implementation follows the permutation testing procedure outlined in the @sec-ccrvam, where the response variable values are randomly permuted to break any association with the predictor variables, thus generating a null distribution under the hypothesis of no association. The p-value is calculated as the proportion of permutation statistics that is as extreme as or more extreme than the observed statistic. The permutation test is powered by SciPy's `permutation_test` utility [@scipy]. By specifying `permutation_type="pairings"` in our SciPy API call, we ensure that only the response values are shuffled, preserving the dependency structure among predictors. The test statistic is defined through a wrapper around the CCRAM computation, and the passage of `vectorized=True` in our SciPy API call enables batch execution across resamples.
 
-The visualization component plots the null distribution with the observed CCRAM value highlighted, providing a graphical representation of the statistical significance. This analysis can be repeated for SCCRAM by setting `scaled = True` as an input argument of the `permutation_test_ccram()` function.
+The visualization component plots the null distribution with the observed CCRAM value highlighted, providing a graphical representation of the statistical significance. As for the above example, we use `alternative="greater"` for our hypothesis testing. But user is allowed to use `"two-sided"` or `"less"` depending on their needs and preferences.
+
+This analysis can be repeated for SCCRAM by setting `scaled = True` as an input argument of the `permutation_test_ccram()` function.
 
 ## Software Architecture and Design Principles
 
@@ -406,35 +428,35 @@ The package follows an object-oriented design, encapsulating related functionali
 
 The package is organized into three main components:
 
-1.  **Core CCRVAM Implementation** (`GenericCCRVAM` class within `gencopula` module): This is the central object that implements the fundamental calculations for checkerboard copula regression, while handling internal data representation and transformation. Through this, we provide our users several methods for prediction and association measures.
+1.  **Core CCRVAM Implementation** (`GenericCCRVAM` class within the `gencopula` module): This central object implements the fundamental calculations for checkerboard copula regression while handling internal data representation and transformation. Through this, we provide our users with several methods for estimating prediction and association measures.
 
-2.  **Statistical Simulation Framework** (`genstatsim` module): This module implements bootstrap and permutation testing procedures, while providing uncertainty quantification for predictions and measures. Through this, we also provide users the flexibility through visualization and exporting methods for statistical results
+2.  **Statistical Simulation Framework** (`genstatsim` module): This module implements bootstrap and permutation testing procedures while providing uncertainty quantification for predictions and measures. Through this, we also provide users flexibility through visualization and exporting methods for statistical results
 
-3.  **Data Processing Utilities** (`utils` module): This module handles user-facing data loading and formatting methods, providing conversion between different data representations such as table form, case form, and frequency form as outlined in @sec-rda. Through this, we also provide users basic functionality for data validation and pre-processing.
+3.  **Data Processing Utilities** (`utils` module): This module handles user-facing data loading and formatting methods, providing conversion between data representations such as table form, case form, and frequency form as outlined in @sec-rda. Through this, we also provide users with basic data validation and preprocessing functionality.
 
-We can visualize the package structure and user-experience-workflow through the images below (powered by Mermaid [@mermaid]):
+We can visualize the package structure and user-experience-workflow through the images below powered by Mermaid [@mermaid]:
 
-![High-Level Package Structure of CCRVAM](fig/mermaid_pkg_structure.png){#fig-pkgstructure}
+![High-Level Package Structure of CCRVAM](fig/mermaid_pkg_structure_final.png){#fig-pkgstructure fig-align="left" height=500% width=110%}
 
 @fig-pkgstructure illustrates the modular organization of the `ccrvam` codebase. The core functionality is encapsulated within the checkerboard subpackage, which houses the main analytical engine (`genccrvam.py`), statistical simulation tools (`genstatsim.py`), and data preprocessing utilities (`utils.py`). The top-level package initialization file (`__init__.py`) exposes these modules for external use, while supplementary materials such as documentation, examples, and tests are organized into their respective directories.
 
-![Functional Workflow for Checkerboard Copula Analysis](fig/mermaid_ux_workflow.png){#fig-uxworkflow}
+![Functional Workflow for Checkerboard Copula Analysis](fig/mermaid_ux_workflow_final.png){#fig-uxworkflow fig-align="left" height=500% width=110%}
 
 @fig-uxworkflow outlines the end-to-end computational pipeline within the `ccrvam` package. Raw categorical data is processed into a contingency table using the `DataProcessor`. This table can then be passed into the `GenericCCRVAM` class for association analysis, prediction, and visualization. Alternatively, the same input can be used in bootstrapping and permutation testing workflows to produce confidence intervals, p-values, and prediction heatmaps. The system supports both analytical modeling and robust statistical inference.
 
-### Vectorized Implementations, and Error Handling
+### Vectorized Implementations and Error Handling
 
-Performance optimization was a key consideration in the design, particularly for higher-dimensional tables. By leveraging NumPy's [@numpy] vectorized operations, Pandas's [@pandas] effective data-handling, SciPy's [@scipy] bootstrapping function-calls, and Matplotlib's [@matplotlib] efficient graphing APIs (Application Programming Interfaces) the package achieves significantly better performance than naive loop-based implementations, enabling analysis of larger datasets.
+Performance optimization was a key consideration in the design, particularly for higher-dimensional tables. By leveraging NumPy's [@numpy] vectorized operations, Pandas's [@pandas] effective data handling, SciPy's [@scipy] bootstrapping function calls, and Matplotlib's [@matplotlib] efficient graphing APIs (Application Programming Interfaces) the package achieves significantly better performance than naive loop-based implementations, enabling analysis of larger datasets.
 
-The package includes comprehensive input validation and error handling to provide informative messages when issues arise. This approach helps users identify and fix problems quickly, improving the overall user experience. On the developer-side, this allows for easy debugging, and faster development of new features.
+The package includes comprehensive input validation and error handling to provide informative messages when issues arise. This approach helps users identify and fix problems quickly, improving the overall user experience. On the developer side, this allows for easy debugging and faster development of new features.
 
 ## Testing, Validation, and Performance Evaluation
 
 ### Comprehensive Test Suite
 
-The `ccrvam` package includes a comprehensive test suite to ensure correctness and reliability across all implemented functionality. The test suite encompasses unit tests for all core functionality, providing verification of individual components in isolation, while integration tests confirm proper behavior in end-to-end workflows that simulate typical user interactions. Edge case testing rigorously examines boundary conditions where algorithms are most likely to fail, and dimensional-invariant testing validates consistent performance across 2D, 3D, and 4D contingency tables of varying complexity. The suite also incorporates regression tests to prevent the reintroduction of previously fixed bugs as the codebase evolves.
+The `ccrvam` package includes a comprehensive test suite to ensure correctness and reliability across all implemented functionality. The test suite encompasses unit tests for all core functionality, verifying individual components in isolation. In contrast, integration tests confirm proper behavior in end-to-end workflows that simulate typical user interactions. Edge case testing rigorously examines boundary conditions where algorithms are most likely to fail, and dimensional-invariant testing validates consistent performance across varying complexity across 2D, 3D, and 4D contingency tables. The suite also incorporates regression tests to prevent reintroducing previously fixed bugs as the codebase evolves.
 
-The package achieves over 93% code coverage, ensuring that most code paths and user experiences are well-tested and safe for production use in statistical analysis. In order to achieve better observability into our code and maintain a check ensuring that our tests pass irrespective of machine environments, we leveraged pytest [@pytest] and coverage [@coveragepy] Python libraries as our testing infrastructure. These tools provide a robust framework for automated test execution and detailed reporting on test coverage. An example test from our suite is shown below:
+The package achieves over 93% code coverage, ensuring that most code paths and user experiences are well-tested and safe for production use in statistical analysis. In order to achieve better observability in our code and maintain a check ensuring that our tests pass irrespective of machine environments, we leveraged pytest [@pytest] and coverage [@coveragepy] Python libraries as our testing infrastructure. These tools provide a robust framework for automated test execution and detailed reporting on test coverage. An example test from our suite is shown below:
 
 ```{python}
 #| label: test-2d-sccram-metrics
@@ -459,17 +481,25 @@ def test_calculate_SCCRAM(
     np.testing.assert_almost_equal(calculated, expected_sccram)
 ```
 
-Additional tests covering various aspects of the package's functionality can be found in the GitHub repository at <https://github.com/DhyeyMavani2003/ccrvam/tree/main/tests>.
+Additional tests covering various aspects of the package's functionality can be found in the GitHub repository at [ccrvam/tests](https://github.com/DhyeyMavani2003/ccrvam/tree/main/tests).
 
 ### Continuous Integration (CI)
 
-The development workflow includes CI testing through GitHub Actions and `.yml` files. This configuration ensures that tests are run automatically on multiple Python versions (3.8, 3.9, 3.10, 3.11, 3.12, 3.13) for every code change, maintaining compatibility and reliability.
+To ensure code reliability and maintain compatibility across environments, the development workflow for `ccrvam` incorporates automated Continuous Integration (CI) using **GitHub Actions**. The CI pipeline is configured via `.yml` files to trigger test suites automatically upon every commit or pull request.
+
+This setup enables testing across multiple Python versions—specifically 3.8, 3.9, 3.10, 3.11, 3.12, and 3.13—ensuring that the package remains robust and backward-compatible with older versions while embracing newer releases. Each test run verifies the integrity of core functionalities, including CCRAM/SCCRAM computations, bootstrapping procedures, and parallelization logic, helping to prevent regressions and promote long-term maintainability.
+
+By integrating CI early in the development cycle, the package maintains high reliability and reproducibility throughout its evolution.
 
 ### Performance Benchmarking
 
-The package includes three main performance optimizations for handling larger contingency tables: vectorized implementations for core calculations, caching of intermediate results such as conditional distributions to avoid redundant computation, efficient data structures for sparse representation where appropriate.
+To ensure scalability and responsiveness when working with complex, high-dimensional contingency tables, the `ccrvam` package incorporates a series of optimizations for computational efficiency and usability. Three core strategies are employed: (1) **vectorized implementations** for all core computations to eliminate Python-level loops; (2) **caching of intermediate statistics**, such as conditional distributions, to avoid redundant recalculations; and (3) **sparse-aware data structures**, which reduce memory overhead and accelerate access for large and sparse tables.
 
-For a 4D contingency table (2x3x2x6) with 112 cases, operations like CCRAM calculation and bootstrap simulations complete in seconds on modern hardware, allowing for interactive analysis.
+For example, in a contingency table of shape 2×3×2×6 (112 total cells), both the calculation of the Scaled CCRAM (SCCRAM) metric and the generation of bootstrap-based confidence intervals typically complete in under a few seconds on a modern CPU. This efficiency enables near real-time analysis of moderately sized categorical datasets.
+
+A key component of the `ccrvam` package is the `bootstrap_predict_ccr_summary()` function, which estimates predictive performance across all combinations of predictor values via a bootstrap resampling procedure. This function computes a summary matrix of prediction percentages, showing the proportion of bootstrap samples assigned to each possible response category for each predictor combination. Notably, this method is designed with **native support for parallel execution**. By simply setting the `parallel=True` flag (enabled by default), users can leverage multiple CPU cores to accelerate computation. Internally, `ccrvam` utilizes Python’s `concurrent.futures.ProcessPoolExecutor` to automatically detect and allocate available cores, executing bootstrap iterations independently and concurrently. Empirical benchmarks demonstrate the efficiency of this design: enabling parallelism yields a **3× reduction in runtime latency with 7 threads**, and up to an **15× speedup using 63 cores on FrostByte**, Amherst College’s High Performance Computing (HPC) cluster. This substantial performance gain makes `ccrvam` highly scalable and well-suited for large-scale studies requiring intensive resampling procedures.
+
+Finally, to enhance computational performance on larger datasets, `ccrvam` is implemented in such a way to allow for seamless GPU integration on the user side at the moment. By leveraging [CuPy](https://github.com/cupy/cupy), a NumPy-compatible library for GPU-accelerated computing [@cupy], users can offload core computations to NVIDIA CUDA or AMD ROCm GPUs with minimal code modifications. This enables significant speedups in parallelizable operations such as bootstrapping and marginalization over large multi-way tables.
 
 ## User Documentation and Example Workflows
 
@@ -477,10 +507,10 @@ The `ccrvam` package includes comprehensive documentation and example workflows 
 
 ### API Documentation
 
-The package provides detailed API documentation for all user and developer facing functions and classes through Sphinx [@sphinx]. The documentation is hosted on ReadTheDocs at <https://ccrvam.readthedocs.io/>, and include function signatures, input arguments descriptions, outputs documentation, warnings/errors log, usage examples on 2D anf 4D sample datasets, and cross-references to related functions.
+The package provides detailed API documentation for all user and developer-facing functions and classes through Sphinx [@sphinx]. The documentation is hosted on ReadTheDocs at [ccrvam.readthedocs.io](https://ccrvam.readthedocs.io). It includes function signatures, input argument descriptions, outputs documentation, warnings/errors log, usage examples on 2D and 4D sample datasets, and cross-references to related functions.
 
 ### Example Workflows {#sec-examples}
 
-The package includes example workflows to demonstrate common analysis patterns. These examples (located at <https://github.com/DhyeyMavani2003/ccrvam/tree/main/examples/jupyter>) demonstrate complete analysis workflows from data loading to visualization and statistical testing, helping users understand how to apply the package to their own research questions.
+The package includes example workflows to demonstrate common analysis patterns. These examples (located at [ccrvam/examples/jupyter](https://github.com/DhyeyMavani2003/ccrvam/tree/main/examples/jupyter)) demonstrate complete analysis workflows from data loading to visualization and statistical testing, helping users understand how to apply the package to their own research questions.
 
 In the next chapter, we will use our `ccrvam` package to perform EDA on some real-world datasets.

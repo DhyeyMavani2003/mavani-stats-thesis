@@ -3,8 +3,8 @@ project:
   
 book:
   # Update info below with your info and the date
-  output-file: "dhyey-mavani_thesis_2025-04-01" 
-  title: "CCRVAM : a Python Package for Model-Free Exploratory Analysis of Multivariate Discrete Data with Ordinal Response Variable"
+  output-file: "dhyey-mavani_thesis_2025-04-18" 
+  title: "`ccrvam` : a Python Package for Model-Free Exploratory Analysis of Multivariate Discrete Data with an Ordinal Response Variable"
   author: "Dhyey Mavani"
   # `today` date option will automatically print the date of rendering
   date: today
@@ -24,7 +24,7 @@ book:
   appendices:
     - 08-app1-code.qmd # Must include
     # Must include if corrections are made after initial submission
-    - 09-app2-corrections.qmd
+    # - 09-app2-corrections.qmd
 
 # Replace this file with your .bib file
 bibliography: references.bib 

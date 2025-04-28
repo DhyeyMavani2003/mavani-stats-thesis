@@ -19,13 +19,13 @@ options(knitr.kable.NA = "")
 
 ## Unraveling the Notion of Dependence
 
-In this section, we aim to formalize concepts of dependence and association. To facilitate our understanding, we will use two bivariate random vectors and visualize their relationships through Python code.
+In this section, we aim to formalize concepts of dependence and association. We will use two bivariate random vectors to facilitate our understanding and visualize their relationships through Python code.
 
 ### Motivating Example
 
-Consider $(X_1, X_2)$ and $(Y_1, Y_2)$ be bivariate random vectors, each consisting of 10000 independent data-points, which are distributed with the joint distributions $F_X$ and $F_Y$ respectively. Given these bivariate vectors, one might ask: How can I compare the relationship between $(X_1,X_2)$ to the relationship between $(Y_1, Y_2)$? One of the measures that can help us compare and contrast these relationships is Pearson correlation coefficient (commonly denoted as $\rho_{pearson}$). After preliminary calculations on a python kernel, we can see that $\rho_{pearson}(X_1, X_2) \approx 0.802$, but on the other hand, the correlation between $\rho_{pearson}(Y_1, Y_2) \approx 0.755$. From these measure-values, it seems that the dependence between $(X_1,X_2)$ is stronger than the dependence between $(Y_1, Y_2)$. Although this agrees with our scatter plots in @fig-motivating-example, it is vital to note that $\rho_{pearson}$ only captures the linear dependence between the underlying random variables at hand.
+Consider $(X_1, X_2)$ and $(Y_1, Y_2)$ to be bivariate random vectors, each consisting of 10000 independent data points, which are distributed with the joint distributions $F_X$ and $F_Y$, respectively. Given these bivariate vectors, one might ask: How can I compare the relationship between $(X_1, X_2)$ to the relationship between $(Y_1, Y_2)$? One of the measures that can help us compare and contrast these relationships is the Pearson correlation coefficient (commonly denoted as $\rho_{pearson}$). After preliminary calculations on a Python kernel, we can see that $\rho_{pearson}(X_1, X_2) \approx 0.802$, but on the other hand, $\rho_{pearson}(Y_1, Y_2) \approx 0.755$. From these measure values, the dependence between $(X_1, X_2)$ is stronger than the dependence between $(Y_1, Y_2)$. Although this agrees with our scatter plots in @fig-motivating-example, it is vital to note that $\rho_{pearson}$ only captures the linear dependence between the underlying random variables at hand.
 
-Upon observing the @fig-motivating-example closely, we note that the marginal distributions of $X_1$ and $X_2$ are close to normal, unlike the marginals of $Y_1$ and $Y_2$. Moreover, we can see that the relationship between $Y_1$ and $Y_2$ is non-linear. This vast difference in marginals takes away our trust from the appropriateness of the use of $\rho_{pearson}$ as a measure to compare dependence between the data vectors at hand.
+Upon observing the @fig-motivating-example closely, we note that the marginal distributions of $X_1$ and $X_2$ are close to normal, unlike the marginals of $Y_1$ and $Y_2$. Moreover, we can see that the relationship between $Y_1$ and $Y_2$ is non-linear. This vast difference in marginals takes away our trust from the appropriateness of using $\rho_{pearson}$ as a measure to compare dependence between the data vectors at hand.
 
 ```{python}
 #| label: gen-data-motivating-example
@@ -105,7 +105,7 @@ knitr::include_graphics("fig/motivating_example.png")
 
 ```
 
-Let's introduce a lemma that will help us transform the marginals so that the resulting marginals are more similar, and try to only capture or extract the "dependence" components, which will allow us to make fairer comparisons. 
+Let us introduce a lemma that will help us transform the marginals so that the resulting marginals are more similar and try only to capture or extract the "dependence" components, allowing us to make fairer comparisons. 
 
 ::: {#lem-prob-int-trans}
 ### Probability Integral Transformation
@@ -113,7 +113,7 @@ Let's introduce a lemma that will help us transform the marginals so that the re
 Let $F$ be a continuous distribution function and let $X \sim F$, then $F(X)$ is a standard uniform random variable, that is, $F(X) \sim U(0,1)$.
 :::
 
-@lem-prob-int-trans allows us to transform a continuous random variable to a random variable which has standard uniform distribution. So, by using this transformation, we can now convert our marginals $X_1, X_2, Y_1, Y_2$ individually to be distributed $\text{Uniform}(0,1)$. And, since now the resulting marginals will all be of the same type, it will allow us to compare the dependence between random variables on fairer grounds.
+@lem-prob-int-trans allows us to transform a continuous random variable into a random variable with standard uniform distribution. So, by using this transformation, we can now convert our marginals $X_1, X_2, Y_1, Y_2$ individually to be distributed $\text{Uniform}(0,1)$. Moreover, since the resulting marginals will all be the same type now, we can compare the dependence between random variables on fairer grounds.
 
 For instance, if we know that $X_1 \sim N(0,1) = F_1$, $X_2 \sim N(0,1) = F_2$, $Y_1 \sim Gamma(3, 15) = G_1$, and $Y_2 \sim Beta(5, 3) = G_2$, where $F_1, F_2, G_1, G_2$ denote the distribution functions of the respective random variables. By @lem-prob-int-trans, we can say that $F_1(X_1), F_2(X_2), G_1(Y_1),$ and $G_2(Y_2)$ are each distributed $\text{Uniform}(0,1)$.
 
@@ -184,9 +184,9 @@ knitr::include_graphics("fig/transformed_motivating_example.png")
 
 ```
 
-Looking at @fig-transformed-motivating-example, we can see that the transformed data vectors appear to be significantly similar. We can computationally verify this by quickly calculating the $\rho_{pearson}$ for ($F_1(X_1)$, $F_2(X_2)$) and ($G_1(Y_1)$, $G_2(Y_2)$), which turns out to be 0.788 for both data vector pairs, meaning that both have same dependence structures.
+Looking at the @fig-transformed-motivating-example, we can see that the transformed data vectors appear to be significantly similar. We can computationally verify this by quickly calculating the $\rho_{pearson}$ for ($F_1(X_1)$, $F_2(X_2)$) and ($G_1(Y_1)$, $G_2(Y_2)$), which turns out to be 0.788 for both data vector pairs, meaning that both have same dependence structures.
 
-An alternative way to approach the problem (of comparing dependence of distinct pairs of marginals), is by transforming the marginals of $(Y_1, Y_2)$ to be normal (same as marginals of $(X_1, X_2)$). As one can predict, in order to accomplish this transformation, we would need to "undo the current distributional mappings on $(Y_1, Y_2)$", which we can formally define as generalized inverse as follows:
+An alternative way to approach the problem (of comparing dependence of distinct pairs of marginals) is by transforming the marginals of $(Y_1, Y_2)$ to be normal (same as marginals of $(X_1, X_2)$). As one can predict, in order to accomplish this transformation, we would need to "undo the current distributional mappings on $(Y_1, Y_2)$", which we can formally define as a generalized inverse as follows:
 
 ::: {#def-quantile-function}
 ### Quantile Function
@@ -195,10 +195,10 @@ $F^{\leftarrow}$ (Quantile Function) is defined as $F^{\leftarrow}(y) = \text{in
 :::
 
 :::{.callout-warning}
-The quantile function $F^{\leftarrow} = F^{-1}$ only when $F$ is continuous and strictly increasing. Thus it is important to note that, in other cases, the ordinary inverse $F^{-1}$ need not exist. [@ecmr]
+The quantile function $F^{\leftarrow} = F^{-1}$ only when $F$ is continuous and strictly increasing. Thus, it is important to note that, in other cases, the ordinary inverse $F^{-1}$ need not exist. [@ecmr]
 :::
 
-With the above definition of $F^{\leftarrow}$, let's introduce a lemma from [@ecmr] that will help us perform the transformation to normal.
+With the above definition of $F^{\leftarrow}$, let us introduce a lemma from @ecmr that will help us perform the transformation to normal.
 
 ::: {#lem-quantile-transformation}
 ### Quantile Transformation
@@ -210,7 +210,7 @@ Let $U \sim \text{Unif}(0, 1)$ and let $F$ be any distribution function be a dis
 @lem-quantile-transformation is valid for non-continuous densities $F$ as well. [@ecmr]
 :::
 
-Let's start with the transformations where we left off in @fig-transformed-motivating-example, since we have uniform densities there. Applying @lem-quantile-transformation on $G_1(Y_1)$ and $G_2(Y_2)$ using quantile functions $F_1^{\leftarrow} = F_1^{-1}$ and $F_2^{\leftarrow} = F_2^{-1}$ respectively gives us that $F_1^{-1}(G_1(Y_1)) \sim F_1$ and $F_2^{-1}(G_2(Y_2)) \sim F_2$. 
+Let us start with the transformations where we left off in @fig-transformed-motivating-example since we have uniform densities. Applying @lem-quantile-transformation on $G_1(Y_1)$ and $G_2(Y_2)$ using quantile functions $F_1^{\leftarrow} = F_1^{-1}$ and $F_2^{\leftarrow} = F_2^{-1}$ respectively gives us that $F_1^{-1}(G_1(Y_1)) \sim F_1$ and $F_2^{-1}(G_2(Y_2)) \sim F_2$. 
 
 ```{python}
 #| label: gen-data-quantile-transformed-motivating-example
@@ -274,13 +274,13 @@ Notice in @fig-quantile-transformed-motivating-example that the resulting transf
 
 ## Copulas as a Unified Framework for Dependence
 
-Copulas are a class of multivariate distribution functions with $Unif(0, 1)$ marginals. The motivating example in the previous section explains the usage of copulas as the structures capturing margin-independent dependence between random variables.
+Copulas are a class of multivariate distribution functions with $\text{Uniform}(0, 1)$ marginals. The motivating example in the previous section explains the usage of copulas as the structures capturing margin-independent dependence between random variables.
 
 :::{.callout-note}
-The choice of $Unif(0, 1)$ as a post-transformation margin for the data at hand is  somewhat arbitrary although it does simplify further results. One can use modifications of @lem-prob-int-trans and @lem-quantile-transformation to define copulas with respect to any margin of choice without affecting the final conclusions about the dependence between the data at hand. [@ecmr]
+The choice of $\text{Uniform}(0, 1)$ as a post-transformation margin for the data at hand is somewhat arbitrary, although it does simplify further results. One can use modifications of @lem-prob-int-trans and @lem-quantile-transformation to define copulas with respect to any margin of choice without affecting the conclusions about the dependence between the data at hand. [@ecmr]
 :::
 
-In order to understand copulas better, for now, let's restrict ourselves to the 2-D (2-dimensional) case. Firstly, let's introduce the definition of a broader class of functions called subcopulas as a preliminary, which will help us mathematically define copulas as a special case. [@nelsen]
+In order to understand copulas better, for now, let us restrict ourselves to the 2-D (2-dimensional) case. First, let us define a broader class of functions called subcopulas as a preliminary, which will help us mathematically define copulas as a special case. [@nelsen]
 
 ::: {#def-2d-subcopula}
 ### 2-Dimensional Subcopula
@@ -307,14 +307,14 @@ A **two-dimensional copula** (2-copula) is a function $C: [0, 1] \times [0, 1] \
 :::
 
 :::{.callout-note}
-A 2-D copula is essentially a 2-subcopula with a full unit square as domain ($D_1 = D_2 = [0, 1]$). Furthermore, copula and subcopula are the same within a domain with continuous variables. Later in this chapter, we will discuss why this doesn't hold when one of the variables is discrete. 
+A 2-D copula is just a 2-subcopula with a full unit square as domain ($D_1 = D_2 = [0, 1]$). Furthermore, copula and subcopula are the same within a domain with continuous variables. Later in this chapter, we will discuss why this does not hold when one of the variables is discrete. 
 :::
 
-In this work, we will mainly deal with 2-D copulas and subcopulas, but the definitions above can be generalized to n-D case with some notable exceptions detailed (with proofs) in section 2.10 of @nelsen. Moreover, there are many different families of copulas bearing peculiar properties and corresponding margins, we are not covering them in detail since that is not the focus of this work, and a comprehensive summary of many of these families can be found in chapter 3 of @ecmr.
+In this expository chapter, we will mainly deal with 2-D copulas and subcopulas. However, the definitions above can be generalized to the n-D case with some notable exceptions detailed (with proofs) in section 2.10 of @nelsen. Moreover, many different families of copulas bear peculiar properties and corresponding margins. We are not covering them in detail since that is not the focus of this work, and a comprehensive summary of many of these families can be found in chapter 3 of @ecmr.
 
 ### Fréchet-Hoeffding Bounds
 
-For any distribution function, boundedness is always a desired property. In the case of copulas, we have a famous theorem that provides us the upper and lower pointwise bounds.
+For any distribution function, boundedness is always a desired property. In the case of copulas, we have a famous theorem that provides us with the upper and lower pointwise bounds.
 
 ::: {#thm-fh-bounds}
 ### Fréchet-Hoeffding Bounds
@@ -324,7 +324,7 @@ Given a 2-D copula $C$, $W(u,v) = \max\{0, u+v-1\} \leq C(u,v) \leq \min\{u,v\} 
 
 ## Sklar's Theorem and Invariance Principle
 
-@thm-sklar by [@sklar1959fonctions] is one of the seminal results in copula theory, which extended the applications of copulas, and explained why copulas captures the dependence by relating the joint distributions to univariate margins.
+@thm-sklar by [@sklar1959fonctions] is one of the seminal results in copula theory, which extended the applications of copulas and explained why copulas capture the dependence by relating the joint distributions to univariate margins.
 
 ::: {#thm-sklar}
 ### Fréchet-Hoeffding Bounds
@@ -335,24 +335,24 @@ Given a 2-D copula $C$, $W(u,v) = \max\{0, u+v-1\} \leq C(u,v) \leq \min\{u,v\} 
 2. Conversely, $H$ is defined as a 2-D distribution function with marginals $F, G$, if we are given copula $C$ along with the univariate marginals $F, G$.
 :::
 
-In this work, we will mainly deal with two dimensions, but @thm-sklar above can be generalized to n-D case as detailed in section 2.10 of @nelsen. Below, we include a few insights drawn from [@ecmr] that will be important to our ongoing discussion:
+The expository part of this thesis will mainly deal with two dimensions, but @thm-sklar above can be generalized to n-D case as detailed in section 2.10 of @nelsen. Below, we include a few insights drawn from @ecmr that will be important to our ongoing discussion:
 
 :::{.callout-note}
-@thm-sklar gives us an insight into the name copula as in how it "couples" a joint distribution function to its marginal distributions. This coupling effect and two parts of @thm-sklar show us how we can separate (or combine) multivariate dependence structure and univariate margins.
+@thm-sklar gives us an insight into the name copula and how it "couples" a joint distribution function to its marginal distributions. This coupling effect and two parts of @thm-sklar show us how to separate (or combine) multivariate dependence structure and univariate margins.
 :::
 
 :::{.callout-warning}
 ### Spoiler Alert
-In the case of continuous random variables, there is only one **unique** copula that characterizes the multivariate dependence structure, which is very convenient for reasons we will discuss later in this chapter. This is not the case with discrete variables, which make the direct use of continuous copulas intractable.
+In the case of continuous random variables, only one **unique** copula characterizes the multivariate dependence structure, which is very convenient for reasons we will discuss later in this chapter. This is not the case with discrete variables, which make the direct use of continuous copulas intractable.
 :::
 
 :::{.callout-note}
-@thm-sklar can be used to verify the existence of a continuous distribution function $H$ in case of a multivariate dataset if and only if we are sure of the existence of corresponding continuous univariate marginals for each variable in the dataset.
+@thm-sklar can be used to verify the existence of a continuous distribution function $H$ in the case of a multivariate dataset if and only if we are sure of the existence of corresponding continuous univariate marginals for each variable in the dataset.
 :::
 
 ### The Invariance Principle
 
-As we saw in the motivating example, the underlying dependence structure did not change over a certain type of transformations. This was very convenient for us, and thus is a favorable property for a copula to have. This property is often formally referred to as "invariance", which we will formalize in the following theorem from [@ecmr]
+As we saw in the motivating example, the underlying dependence structure did not change over a specific type of transformation. This was very convenient for us; thus, it is a favorable property for a copula. This property is often formally referred to as "invariance," which we will formalize in the following theorem from [@ecmr]
 
 ::: {#thm-invariance}
 ### Invariance Principle
@@ -365,9 +365,9 @@ Let $(X, Y) \sim H$ with continuous margins $F, G$ and copula $C$. If $T_X, T_Y$
 
 ## Copulas for Continuous and Discrete Data
 
-Up to this point, our discussion has centered on continuous random variables. Many of the results and definitions we have used rely on continuity, which ensures that the probability integral transform (PIT) maps each variable to a uniform distribution on $[0,1]$. This property, in turn, guarantees the uniqueness of the copula associated with a joint distribution via Sklar’s theorem. In the continuous case, we have taken this uniqueness for granted.
+Up to this point, our discussion has centered on continuous random variables. Many of the results and definitions we have used rely on continuity, which ensures that the probability integral transform (PIT) maps each variable to a uniform distribution on $[0,1]$. This property, in turn, guarantees the uniqueness of the copula associated with a joint distribution via Sklar's theorem. In the continuous case, we have taken this uniqueness for granted.
 
-However, real-world data are often **discrete**. When dealing with discrete random variables, the marginal distribution functions are not continuous, and the PIT no longer produces uniform random variables on the full interval $[0,1]$. Instead, we obtain what is known as a **subcopula**—a function defined only on a proper subset of $[0,1]^2$, namely on the ranges of the marginal distributions.
+However, real-world data are often **discrete**. When dealing with discrete random variables, the marginal distribution functions are not continuous, and the PIT no longer produces uniform random variables on the whole interval $[0,1]$. Instead, we obtain what is known as a **subcopula**—a function defined only on a proper subset of $[0,1]^2$, namely on the ranges of the marginal distributions.
 
 ::: {.callout-note}
 ### Example: Bivariate Bernoulli Distribution
@@ -378,21 +378,21 @@ However, real-world data are often **discrete**. When dealing with discrete rand
 
 ### Unidentifiability Issue
 
-Now, let us examine the unidentifiability problem in more detail. To illustrate the issue, consider the following adapted example in the two-dimensional case, inspired by @Geenens. Suppose we have a subcopula $C^S$ defined on a discrete domain, where $D_1=\operatorname{Ran}(F)$ and $D_2=\operatorname{Ran}(G)$ with the marginal distribution functions $F$ and $G$, respectively. In the continuous case, a two-dimensional (sub)copula is defined on the entire unit square $[0,1]^2$. By contrast, for discrete random variables, the subcopula $C^S$ is only uniquely specified on the domain $D_1 \times D_2 = \operatorname{Ran}(F) \times \operatorname{Ran}(G)$.
+Now, let us examine the unidentifiability problem in more detail. To illustrate the issue, consider the following adapted example from the two-dimensional case inspired by @Geenens. Suppose we have a subcopula $C^S$ defined on a discrete domain, where $D_1=\operatorname{Ran}(F)$ and $D_2=\operatorname{Ran}(G)$ with the marginal distribution functions $F$ and $G$, respectively. In the continuous case, a two-dimensional (sub)copula is defined on the entire unit square $[0,1]^2$. By contrast, for discrete random variables, the subcopula $C^S$ is only uniquely specified on the domain $D_1 \times D_2 = \operatorname{Ran}(F) \times \operatorname{Ran}(G)$.
 
-To obtain a full copula $C$ on $[0,1]^2$, one must “fill in” the gaps—that is, extend the definition of $C^S$ to those parts of the unit square not covered by $D_1 \times D_2$. Unfortunately, there are uncountably many ways to perform this extension while still satisfying the fundamental properties required of a copula in its @def-2d-copula. This leads to a **non-uniqueness** (or **unidentifiability**) issue, which complicates both the development and the application of copula-based models for discrete data. This unidentifiability has been examined in depth in the literature such as @Geenens, and it calls into question the straightforward (direct) application of copula methods when at least one margin is discrete.
+To obtain a full copula $C$ on $[0,1]^2$, one must "fill in" the gaps—that is, extend the definition of $C^S$ to those parts of the unit square not covered by $D_1 \times D_2$. Unfortunately, there are countless ways to perform this extension while still satisfying the fundamental properties required of a copula in its @def-2d-copula. This leads to a **non-uniqueness** (or **unidentifiability**) issue, which complicates the development and the application of copula-based models for discrete data. This unidentifiability has been examined in depth in the literature, such as @Geenens, and it calls into question the straightforward (direct) application of copula methods when at least one margin is discrete.
 
-One of the ways to fill in the gaps is by performaing a Distributional Transform, which basically serves to add random "noise" to each of the gaps in parent distribution as described by @RUSCHENDORF and @Faugeras. After applying this, we can directly proceed to apply results from continuous copula modeling as we have smoothened out the discontinuities. Another method that also accomplishes this goal is the multilinear extension of the subcopula, which leads to a copula that is commonly known as *Checkerboard Copula*.
+One of the ways to fill in the gaps is by performing a Distributional Transform, which adds random "noise" to each of the gaps in parent distribution as described by @RUSCHENDORF and @Faugeras. After applying this, we can directly proceed to apply results from continuous copula modeling as we have smoothened out the discontinuities. Another method that accomplishes this goal is the multilinear extension of the subcopula, which leads to a copula commonly known as *Checkerboard Copula*.
 
 ## Checkerboard Copula {#sec-checkerboard-copula}
 
-In this section, we will define Checkerboard Copula [@genest2014], which is just a multilinearly interpolated copula on $[0,1]^d$ constructed from any subcopula $C^S$. Before we dive into this definition, let's settle notations for some of the tools that we will be using. 
+In this section, we will define Checkerboard Copula [@genest2014], which is just a multilinearly interpolated copula on $[0,1]^d$ constructed from any subcopula $C^S$. Before diving into this definition, let us settle notations for some of our tools. 
 
 Let **X** $= (X_1, \dots, X_d)^T$ be a $d$-dimensional random vector with joint cumulative distribution function (c.d.f.) $H$, and arbitrary marginal c.d.f.s $F_1, \dots, F_d$. 
 
-We know by @thm-sklar, that there exists at least one copula $C:[0,1]^d \to [0,1]$ such that $H(x_1, \dots, x_d) = C(F_1(x_1), \dots, F_d(x_d)), \text{ where } x_1, \dots, x_d \in \mathbb{R}$. As mentioned before, if the marginal c.d.f.s are continuous, then $C$ is unique, and that $C = \textbf{F}(\textbf{X}) = (F_1(X_1), \dots, F_d(X_d))$. But in the case of discrete data, it is only uniquely determined on the domain $\Pi_{j=1}^d Ran(F_j)$.
+We know by @thm-sklar, that there exists at least one copula $C:[0,1]^d \to [0,1]$ such that $H(x_1, \dots, x_d) = C(F_1(x_1), \dots, F_d(x_d)), \text{ where } x_1, \dots, x_d \in \mathbb{R}$. As mentioned before, if the marginal c.d.f.s are continuous, then $C$ is unique, and that $C = \textbf{F}(\textbf{X}) = (F_1(X_1), \dots, F_d(X_d))$. However, in the case of discrete data, it is only uniquely determined on the domain $\Pi_{j=1}^d Ran(F_j)$.
 
-Now, let's suppose that each $X_j$ in $\textbf{X}$ is an ordinal variable with finite number of categories $I_j$, which we can denote with numbers through a fixed ordering $\{x_1^j < \dots < x_{i_j}^j < \dots < x_{I_j}^j\}$. We need this ordering to represent our data in a $d$-way contingency table format that classifies our observations with respect to the $d$-variables each representing an axis, and a fixed ordering making sure that we can unambiguously locate the observations with a certain combination of categories within the contingency table. 
+Now, let's suppose that each $X_j$ in $\textbf{X}$ is an ordinal variable with finite number of categories $I_j$, which we can denote with numbers through a fixed ordering $\{x_1^j < \dots < x_{i_j}^j < \dots < x_{I_j}^j\}$. We need this ordering to represent our data in a $d$-way contingency table format that classifies our observations with respect to the $d$-variables, each representing an axis and a fixed ordering, making sure that we can unambiguously locate the observations with a certain combination of categories within the contingency table. 
 
 ::: {#def-joint-pmf-d-way-contable}
 ### Joint p.m.f. in a d-way contingency table
@@ -431,12 +431,12 @@ A **conditional probability mass function (p.m.f.)** of $X_j$ given $\textbf{X}_
 $$
 p_{i_j|\textbf{i}_{-j}} = \frac{p_{i_1, \dots, i_d}}{p_{i_1, \dots, +_j, \dots, i_d}} 
 $$
-Also, let's denote (finite and discrete) range of the marginal distribution of $X_j$ to be $D_j=\{u_0^j, \dots, u_{i_j}^j, \dots, u_{I_j}^j\}$. Then, $u_0^j = 0$, $u_{I_j}^j = 1$, and $u_{i_j}^j = \sum_{k_j=1}^{i_j} p_{+k_j+}$.
+Also, let us denote the (finite and discrete) range of the marginal distribution of $X_j$ to be $D_j=\{u_0^j, \dots, u_{i_j}^j, \dots, u_{I_j}^j\}$. Then, $u_0^j = 0$, $u_{I_j}^j = 1$, and $u_{i_j}^j = \sum_{k_j=1}^{i_j} p_{+k_j+}$.
 
 :::
 
 ::: {.callout-note}
-If the superscript in $u_{i_j}^j$ can be trivially deduced from the subscript, then for notational ease, the superscript can be omitted.
+If the superscript in $u_{i_j}^j$ can be trivially deduced from the subscript, then the superscript can be omitted for notational ease.
 :::
 
 Then, by @thm-sklar, the unique subcopula $C^S$ associated with $d$-dimensional random vector $\textbf{X}$ over $\prod_{j=1}^d D_j$ is given by $H(x_{i_1}^1, \dots, x_{i_d}^d) = \sum_{k_1 \le i_1} \dots \sum_{k_d \le i_d} p_{k_1, \dots, k_d} = C^S(u_{i_1}^1, \dots, u_{i_d}^d)$.
@@ -477,7 +477,7 @@ $$
 
 ## Copula-based Measures of Association and Estimation
 
-Now that we have built an object (copula) that allows us to just capture the multivariate dependence structure between variables, we would like to encode certain pieces of this information into a set of robust measures or metrics. We would call these measures, the **measures of association**. There are two types of measures of association: parametric and non-parametric. As discussed briefly for our motivating example, a common (parametric) measure of association is the Pearson correlation coefficient ($\rho_{pearson}$). Although it is really efficient to calculate, it only captures linear dependence between the random data vectors at hand. Let's discuss this metric in more detail along with its limitations:
+Now that we have built an object (copula) that allows us to capture the multivariate dependence structure between variables, we would like to encode certain pieces of this information into a set of robust measures or metrics. We call these measures the **measures of association**. There are two types of measures of association: parametric and non-parametric. As discussed briefly for our motivating example, a common (parametric) measure of association is the Pearson correlation coefficient ($\rho_{pearson}$). Although it is efficient to calculate, it only captures linear dependence between the random data vectors. Let us discuss this metric in more detail, along with its limitations:
 
 ### Pearson's Correlation Coefficient ($\rho_{pearson}$) & its Properties
 
@@ -488,11 +488,7 @@ Given a random vector $(X, Y)$ with $Var(X) < \infty$ and $Var(Y) < \infty$, the
 $$
 \rho_{pearson}(X, Y) = \frac{Cov(X, Y)}{\sqrt{Var(X)}\sqrt{Var(Y)}}
 $$
-, where covariance is defined as: 
-$$
-Cov(X, Y) = \mathbb{E}((X - \mathbb{E}(X))(Y - \mathbb{E}(Y)))
-$$
-, and the variance is defined as $Var(X) = \mathbb{E}((X - \mathbb{E}(X))^2)$.
+, where covariance is defined as $Cov(X, Y) = \mathbb{E}((X - \mathbb{E}(X))(Y - \mathbb{E}(Y)))$, and the variance is defined as $Var(X) = \mathbb{E}((X - \mathbb{E}(X))^2)$.
 :::
 
 Let's start by going over some commonly-used properties of $\rho_{pearson}$ as mentioned in @ecmr:
@@ -507,32 +503,32 @@ Let's start by going over some commonly-used properties of $\rho_{pearson}$ as m
 
 ### Limitations of Pearson's Correlation Coefficient ($\rho_{pearson}$)
 
-Although Pearson’s correlation coefficient $\rho_{\text{pearson}}$ is useful in many cases, it only captures **linear dependence** and ignores non-linear relationships. Below, we summarize its key limitations along with illustrative examples.
+Although Pearson's correlation coefficient $\rho_{\text{pearson}}$ is helpful in many cases, it only captures **linear dependence** and ignores non-linear relationships. Below, we summarize its key limitations along with illustrative examples.
 
-1. **Non-Existence of $\rho_{pearson}$:** Pearson's correlation does not exist for every random vector $(X, Y)$, particularly when variances (or other higher order moments) are undefined.
+- **Non-Existence of $\rho_{pearson}$:** Pearson's correlation does not exist for every random vector $(X, Y)$, particularly when variances (or other higher order moments) are undefined.
 
-::: {.example}
+:::{.callout-note}
 #### Example: Heavy-Tailed Distributions
-Consider two independent random variables $X_1, X_2$ drawn from a **Pareto(3)** distribution with $F(x) = 1 - x^{-3}, \quad x \geq 1$. Define $X = X_1$, and $Y = X_1^2$. The covariance is given by $Cov(X, Y) = Cov(X_1, X_1^2) = \mathbb{E}(X_1^3) - \mathbb{E}(X_1)\mathbb{E}(X_1^2)$. For Pareto(3), it is well-known (and can be easily proven) that $\mathbb{E}(X_1^3)$ **does not exist** (as the integral diverges). Since Pearson's formula rely on this moment, $\rho_{pearson}(X, Y)$ **doesn't exist**. On the other hand, we can observe that $Y = X^2$ shows a **perfect functional dependence**, since $Y$ can be represented as a deterministic (quadratic) function of $X$.
+Consider two independent random variables $X_1, X_2$ drawn from a **Pareto(3)** distribution with $F(x) = 1 - x^{-3}, \quad x \geq 1$. Define $X = X_1$, and $Y = X_1^2$. The covariance is given by $Cov(X, Y) = Cov(X_1, X_1^2) = \mathbb{E}(X_1^3) - \mathbb{E}(X_1)\mathbb{E}(X_1^2)$. For Pareto(3), it is well-known (and can be easily proven) that $\mathbb{E}(X_1^3)$ **does not exist** (as the integral diverges). Since Pearson's formula relies on this moment, $\rho_{pearson}(X, Y)$ **does not exist**. On the other hand, we can observe that $Y = X^2$ shows a **perfect functional dependence** since $Y$ can be represented as a deterministic (quadratic) function of $X$.
 :::
 
-2. **Non-Invariance Under Non-Linear Transformations:** $\rho_{pearson}$ is not necessarily invariant under all strictly increasing transformations on $\text{Ran}X$ or $\text{Ran}Y$.
+- **Non-Invariance Under Non-Linear Transformations:** $\rho_{pearson}$ is not necessarily invariant under all strictly increasing transformations on $\text{Ran}X$ or $\text{Ran}Y$.
 
-::: {.example}
+:::{.callout-note}
 #### Example: Logarithmic Transformation on $U(0, 1)$
 Let $X \sim U(0,1)$ and define $Y = \log(X)$. Pearson’s correlation is: $\rho_{\text{pearson}}(X, Y) = \frac{\text{Cov}(X, \log X)}{\sigma_X \sigma_Y}$. Even though$Y = \log(X)$ is a **strictly increasing function**, $\rho_{pearson}$ changes under this transformation. Thus, Pearson's correlation is **not invariant** under (non-linear) monotonic transformations such as $\log$ in certain situations.
 :::
 
-3. **Uncorrelatedness Does Not Imply Independence:** $\rho_{pearson} = 0$ does NOT necessarily imply that $(X, Y)$ are independent.
+- **Uncorrelatedness Does Not Imply Independence:** $\rho_{pearson} = 0$ does NOT necessarily imply that $(X, Y)$ are independent.
 
-::: {.example}
+:::{.callout-note}
 #### Example: Quadratic Transformation on $U(-1, 1)$
 Let $X \sim U(-1,1)$ and define: $Y = X^2$. We can compute: $\mathbb{E}[X] = 0, \quad \mathbb{E}[Y] = \mathbb{E}[X^2] = \frac{1}{3}$. Now, consider the covariance: $\text{Cov}(X, Y) = \mathbb{E}[XY] - \mathbb{E}[X] \mathbb{E}[Y] = \mathbb{E}[X^3] - (0)(\frac{1}{3})$. Since $\mathbb{E}[X^3] = 0$, we get $\text{Cov}(X, Y) = 0$. Thus, $\rho_{\text{pearson}}(X, Y) = 0$, but **$X$ and $Y$ are clearly dependent**, since knowing $X$ exactly determines $Y$. This example demonstrates that a zero Pearson correlation does **not** imply statistical independence.
 :::
 
-4. **Non-Uniqueness of the Joint Distribution Given Marginals and $\rho_{pearson}$:** The marginal distributions and the correlation coefficient do not uniquely determine the joint distribution. 
+- **Non-Uniqueness of the Joint Distribution Given Marginals and $\rho_{pearson}$:** The marginal distributions and the correlation coefficient do not uniquely determine the joint distribution. 
 
-::: {.example}
+:::{.callout-note}
 #### Example: Bivariate Normal and Mixture Distributions
 Consider two bivariate distributions:
 
@@ -554,22 +550,22 @@ Both cases yield: $\rho_{pearson}(X_1, X_2) = 0.5$.
 However, their **joint distributions are completely different**, meaning **$\rho_{pearson}$ does not uniquely determine dependence**.
 :::
 
-5. **Unattainability of Certain Correlations:** Given margins $F_1, F_2$, some $\rho_{pearson} \in [-1,1]$ values cannot be attained by choosing any possible copula for $(X_1, X_2)$. An example demonstrating this can be found in @ecmr p.46
+- **Unattainability of Certain Correlations:** Given margins $F_1, F_2$, some $\rho_{pearson} \in [-1,1]$ values cannot be attained by choosing any possible copula for $(X_1, X_2)$. An example demonstrating this can be found in @ecmr p.46
 
-In order to circumvent some of the limitations of pearson coefficient, we now consider rank-based correlation measures such as Spearman's Rho ($\rho_{spearman}$) and Kendall's Tau ($\tau_{kendall}$) as they only depend on the underlying copula $C$ at least in the case of continuous random variables. Again, we will discuss the pecularities of the discrete case later in this chapter.
+In order to circumvent some of the limitations of the Pearson coefficient, we now consider rank-based correlation measures such as Spearman's Rho ($\rho_{Spearman}$) and Kendall's Tau ($\tau_{Kendall}$) as they only depend on the underlying copula $C$ at least in the case of continuous random variables. Again, we will discuss the peculiarities of the discrete case later in this chapter.
 
-These rank-based measures are also known as **measures of concordance**. [@ecmr] In order to better understand this, we would first need to define _concordance_. Consider two points in $\mathbb{R}^2$, $(x_1, y_1)$ and $(x_2, y_2)$. These points are defined as concordant if $(x_1 - x_2)(y_1 - y_2) > 0$ and discordant if $(x_1 - x_2)(y_1 - y_2) < 0$.
+These rank-based measures are also known as **measures of concordance** [@ecmr]. We first define _concordance_ to better understand this. Consider two points in $\mathbb{R}^2$, $(x_1, y_1)$ and $(x_2, y_2)$. These points are defined as concordant if $(x_1 - x_2)(y_1 - y_2) > 0$ and discordant if $(x_1 - x_2)(y_1 - y_2) < 0$.
 
 ### Kendall's Tau
 
 ::: {#def-kendalls-tau}
 ### Kendall's Tau
-Given a bivariate random vector $(X_1, X_2)$ with continuous marginals $F_1$ and $F_2$, let's define $(X_1', X_2')$ as an independent copy of $(X_1, X_2)$. Then the population version of Kendall's tau is defined by:
+Given a bivariate random vector $(X_1, X_2)$ with continuous marginals $F_1$ and $F_2$, let's define $(X_1', X_2')$ as an independent copy of $(X_1, X_2)$. Then, the population version of Kendall's tau is defined by:
 
 $$
 \tau_{kendall}(X_1, X_2) = \mathbb{E}(\text{sign}((X_1 - X_1')(X_2 - X_2')))
 $$
-Here, $\text{sign}(x)$ is the sign-function defined in a piecewise manner as follows:
+Here, $\text{sign}(x)$ is the sign function defined in a piecewise manner as follows:
 $$
 \text{sign}(x) = \begin{cases} 
    -1, & \text{if } x < 0, \\
@@ -592,7 +588,7 @@ Given a bivariate random vector $(X_1, X_2)$ with continuous marginals $F_1$ and
 $$
 \rho_{spearman}(X_1, X_2) = \rho_{pearson}(F_1(X_1), F_2(X_2))
 $$
-We can observe that the Spearman's rho is nothing but Pearson's correlation coefficient of the transformed variables obtained after performing the Probability Integral Transformation defined earlier in @lem-prob-int-trans.
+We can observe that Spearman's rho is only Pearson's correlation coefficient of the transformed variables obtained after performing the Probability Integral Transformation defined earlier in @lem-prob-int-trans.
 :::
 
 As mentioned in @ecmr p.53, we can represent $\rho_{spearman}$ in terms of an underlying copula $C$ as $\rho_{spearman}(C) = 12 \int_{[0, 1]^2}C(u,v)d((u,v)) - 3$.
@@ -602,19 +598,19 @@ As mentioned in @ecmr p.53, we can represent $\rho_{spearman}$ in terms of an un
 ### Note:
 $\tau_{kendall}$ and $\rho_{spearman}$ both overcome the significant limitations of $\rho_{pearson}$ with the following properties as summarized in @ecmr:
 
-* These measures always exist, and are invariance under all (not just linear) strictly increasing transformations
+* These measures always exist and are invariant under all (not just linear) strictly increasing transformations
 
 * These measures attain all values in $[-1, 1]$, and they specifically attain -1 and 1 when the copula $C$ attains the Fréchet-Hoeffding bounds $W$ and $M$ as defined in @thm-fh-bounds
 
 :::
 
-So far, we have seen that in the continuous case, we have association measures that are already model-free, and margin-free, but this is not the case in discrete situations especially because the representations of Spearman's rho and Kendall's tau in terms of copula $C$ are not well-defined due to non-uniqueness of copula. 
+So far, we have seen that in the continuous case, we have association measures that are already model-free and margin-free, but this is not the case in discrete situations, mainly because the representations of Spearman's rho and Kendall's tau in terms of copula $C$ are not well-defined due to non-uniqueness of copula. 
 
-There has been significant research towards the development of model-free and margin-free measures for the discrete case. In the next sub-section, we will discuss some such measures for 2-dimensional discrete data from @denuit2005, @genest2014, @genest2017, and @neslehova2007.
+Significant research has been done on developing model-free and margin-free measures for the discrete case. In the following sub-section, we will discuss some measures for 2-dimensional discrete data from @denuit2005, @genest2014, @genest2017, and @neslehova2007.
 
 ### Checkerboard Copula-based Association Measures for 2-Dimensional Data
 
-Before understanding the 2-D modified versions of Kendall's tau and Spearman's rho that overcome the limitations induced by having "gaps" in the discrete case, let's define our a simpler notation for checkerboard copula in 2-D.
+Before understanding the 2-D modified versions of Kendall's tau and Spearman's rho that overcome the limitations induced by having "gaps" in the discrete case, let us define a simpler notation for the checkerboard copula in 2-D.
 
 For a bivariate random vector $(X_1, X_2)$ with discrete marginals $F_{X_1}$ and $F_{X_2}$, we can construct the checkerboard copula $C^{+}$ through the following process:
 
@@ -622,7 +618,7 @@ For a bivariate random vector $(X_1, X_2)$ with discrete marginals $F_{X_1}$ and
 
 2. Extend this copula to the entire unit square by creating a piecewise constant function over rectangles defined by the discontinuity points of the marginals
 
-3. The resulting in a (visualisable) "checkerboard" pattern, which gives the approach its name
+3. The resulting in a (visualizable) "checkerboard" pattern, which gives the approach its name
 
 Mathematically, the resulting 2-D checkerboard copula can be represented as:
 
@@ -648,30 +644,30 @@ $$\rho^{+}(X_1, X_2) = 12\int_{[0,1]^2} C^{+}(u,v)dudv - 3$$
 
 The checkerboard-based association measures for discrete data represent a significant advancement in the field of dependence modeling. By addressing the "gap problem" inherent in discrete distributions, these measures provide more accurate and reliable quantification of dependence structures compared to their classical counterparts.
 
-Empirical studies by @genest2017 demonstrate that the checkerboard versions consistently outperform traditional measures when applied to discrete data with varying degrees of ties. Their simulation results showed that $\tau^{+}$ and $\rho^{+}$ maintain proper type I error rates in hypothesis testing scenarios, whereas the traditional measures can be overly conservative or, in certain cases, anti-conservative.
+Empirical studies by @genest2017 demonstrate that the checkerboard versions consistently outperform traditional measures when applied to discrete data with varying degrees of ties. Their simulation results showed that $\tau^{+}$ and $\rho^{+}$ maintain the proper type I error rates in hypothesis testing scenarios. In contrast, the traditional measures can be overly conservative or, in some instances, anti-conservative.
 
 Furthermore, @neslehova2007 established the asymptotic properties of these estimators, proving their consistency and deriving their limiting distributions under the null hypothesis of independence. This theoretical foundation enhances the statistical validity of inference procedures based on these measures.
 
 The checkerboard-based measures mentioned above offer several important advantages:
 
-1. **Proper Normalization**: Unlike traditional dependence measures, checkerboard-based measures are inherently bounded between -1 and 1. This boundedness simplifies comparison and interpretation, clearly indicating the direction and strength of dependence. The extreme values (-1 or 1) are specifically attained under conditions of perfect monotone dependence, making them particularly useful for identifying maximal dependence scenarios accurately.
+1. **Proper Normalization**: Unlike traditional dependence measures, checkerboard-based measures are inherently bounded between -1 and 1. This boundedness simplifies comparison and interpretation, clearly indicating the direction and strength of dependence. The extreme values (-1 or 1) are attained explicitly under conditions of perfect monotone dependence, making them particularly useful for identifying maximal dependence scenarios accurately.
 
-2. **Invariance**: A critical strength of checkerboard-based measures is their invariance under strictly increasing transformations of the marginal distributions. This means that these measures remain unaffected by transformations such as scaling or monotone reshaping of the data. Consequently, analyses based on these measures are robust, facilitating comparisons across datasets and ensuring reliability regardless of the chosen scale.
+2. **Invariance**: A critical strength of checkerboard-based measures is their invariance under strictly increasing transformations of the marginal distributions. This means that these measures remain unaffected by transformations such as scaling or monotone data reshaping. Consequently, analyses based on these measures are robust, facilitating comparisons across datasets and ensuring reliability regardless of the chosen scale.
 
-3. **Interpretability**: Checkerboard-based dependence measures consistently maintain interpretability irrespective of data discreteness. Traditional measures often struggle to offer clear interpretations when data exhibits discrete characteristics, leading to ambiguity. In contrast, checkerboard-based approaches offer intuitive interpretations, ensuring clarity whether the data are discrete, continuous, or mixed, thus providing valuable insights in diverse practical applications.
+3. **Interpretability**: Checkerboard-based dependence measures consistently maintain interpretability irrespective of data discreteness. Traditional measures often struggle to offer clear interpretations when data exhibits discrete characteristics, leading to ambiguity. In contrast, checkerboard-based approaches offer intuitive interpretations, ensuring clarity on whether the data are discrete, continuous, or mixed, thus providing valuable insights into diverse practical applications.
 
-4. **Compatibility**: An essential advantage of checkerboard-based measures is their compatibility with continuous marginal distributions. When applied to purely continuous data, these checkerboard-based measures naturally simplify to the standard, widely-used measures of dependence. This property ensures seamless integration of these methods within existing analytical frameworks and allows for straightforward comparisons between traditional and checkerboard-based results.
+4. **Compatibility**: An essential advantage of checkerboard-based measures is their compatibility with continuous marginal distributions. When applied to purely continuous data, these checkerboard-based measures naturally simplify the standard, widely used dependence measures. This property ensures seamless integration of these methods within existing analytical frameworks and allows for straightforward comparisons between traditional and checkerboard-based results.
 
-Additionally, when implementing these checkerboard-based association measures it is important to note that computational complexity increases with the number of distinct values in each marginal.
+Additionally, when implementing these checkerboard-based association measures, it is important to note that computational complexity increases with the number of distinct values in each marginal.
 
 However, it is important to note that despite these advancements, the measures discussed thus far are primarily designed for bivariate (2-dimensional) data. In many real-world applications across fields such as bioinformatics, econometrics, and multivariate time series analysis, we encounter high-dimensional discrete data where pairwise association measures may not capture the full complexity of the dependence structure.
 
-### Looking Forward: Beyong Bivariate Measures
+### Looking Forward: Beyond Bivariate Measures
 
-Although these 2-dimensional checkerboard approaches represent significant progress in the field, modern data analysis increasingly demands tools that can handle multivariate discrete data effectively. In Chapter @sec-ccrvam, we will review @weikim's groundbreaking work on association measures that are valid for n-dimensional discrete data. Their framework extends the checkerboard concept to higher dimensions while preserving the desirable properties of margin-freedom and model-independence.
+Although these 2-dimensional checkerboard approaches represent significant progress in the field, modern data analysis increasingly demands tools that can handle multivariate discrete data effectively. In Chapter @sec-ccrvam, we will review @weikim's groundbreaking work on valid association measures for n-dimensional discrete data. Their framework extends the checkerboard concept to higher dimensions while preserving the desirable properties of margin freedom and model independence.
 
 Chapter @sec-software will then present our contribution to the field: the first-ever Python package implementation of these n-dimensional measures. By making these advanced statistical tools accessible to practitioners through an open-source, well-documented, and computationally efficient Python package, we aim to bridge the gap between theoretical advances and practical applications.
 
-This implementation serves to enable researchers across disciplines to analyze complex discrete multivariate data without the limitations imposed by traditional correlation measures or the need for parametric assumptions. The package includes comprehensive visualization tools, statistical testing procedures, and integration capabilities with popular data science frameworks.
+This implementation enables researchers across disciplines to analyze complex discrete multivariate data without the limitations imposed by traditional correlation measures or the need for parametric assumptions. The package includes comprehensive visualization tools, statistical testing procedures, and integration capabilities with popular data science frameworks.
 
-By developing this implementation, we hope to facilitate wider adoption of these powerful association measures in fields ranging from genomics to social network analysis, where discrete multivariate data is abundant but appropriate analysis tools have been limited.
+By developing this implementation, we aim to facilitate wider adoption of these robust association measures in fields ranging from genomics to social network analysis, where discrete multivariate data is abundant but appropriate analysis tools have been limited.
